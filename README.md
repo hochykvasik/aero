@@ -1,2 +1,2 @@
 # aero
-Frutiger Aero bubbles
+гыгыгы пузырики
