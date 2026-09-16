@@ -1,0 +1,165 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    overflow: hidden;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    background: transparent;
+}
+
+body {
+    position: relative;
+}
+
+/* --- ВОДНЫЙ ФОН --- */
+.water-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -3;
+    
+    /* Подводный градиент: голубой сверху, зелёный снизу */
+    background: linear-gradient(
+        175deg,
+        #4fc3f7 0%,      /* Светло-голубой (поверхность воды) */
+        #74e4ff 15%,     
+        #5bc8e8 30%,     
+        #7dd87a 55%,     /* Плавный переход к зелени */
+        #86e750 70%,     /* Inchworm */
+        #6ab63f 88%,     /* Fresh Cut Grass */
+        #4a8a2a 100%     /* Тёмно-зелёное дно */
+    );
+}
+
+/* --- СВЕТОВЫЕ БЛИКИ --- */
+.water-glow {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(90px);
+    pointer-events: none;
+}
+
+.glow-1 {
+    width: 500px;
+    height: 500px;
+    top: -100px;
+    left: 5%;
+    background: radial-gradient(circle, rgba(255,255,255,0.6) 0%, transparent 70%);
+    animation: glowFloat1 18s infinite alternate ease-in-out;
+}
+
+.glow-2 {
+    width: 600px;
+    height: 600px;
+    top: 25%;
+    right: -150px;
+    background: radial-gradient(circle, rgba(116, 228, 255, 0.7) 0%, transparent 70%);
+    animation: glowFloat2 22s infinite alternate-reverse ease-in-out;
+}
+
+.glow-3 {
+    width: 700px;
+    height: 700px;
+    bottom: -200px;
+    left: 25%;
+    background: radial-gradient(circle, rgba(134, 231, 80, 0.6) 0%, transparent 70%);
+    animation: glowFloat3 28s infinite alternate ease-in-out;
+}
+
+@keyframes glowFloat1 {
+    0% { transform: translate(0, 0) scale(1); opacity: 0.5; }
+    100% { transform: translate(80px, -50px) scale(1.15); opacity: 0.8; }
+}
+
+@keyframes glowFloat2 {
+    0% { transform: translate(0, 0) scale(1); opacity: 0.6; }
+    100% { transform: translate(-70px, 60px) scale(1.1); opacity: 0.4; }
+}
+
+@keyframes glowFloat3 {
+    0% { transform: translate(0, 0) scale(1); opacity: 0.4; }
+    100% { transform: translate(60px, -30px) scale(1.2); opacity: 0.7; }
+}
+
+/* --- ВОЛНЫ НА ВОДЕ (SVG) --- */
+.water-waves {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    animation: waveShift 12s infinite ease-in-out;
+}
+
+@keyframes waveShift {
+    0% { transform: translate(0, 0); }
+    50% { transform: translate(-15px, 8px); }
+    100% { transform: translate(0, 0); }
+}
+
+/* --- ХОЛСТ --- */
+canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    cursor: crosshair;
+    z-index: 1;
+    background: transparent;
+}
+
+/* --- КНОПКА --- */
+.aero-button {
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 15px 40px;
+    font-size: 18px;
+    font-weight: bold;
+    color: #0c71c6;
+    background: linear-gradient(to bottom, #ffffff 0%, #d4f0ff 50%, #74e4ff 100%);
+    border: 2px solid #ffffff;
+    border-radius: 50px;
+    box-shadow: 
+        0 8px 15px rgba(0, 0, 0, 0.2),
+        inset 0 -4px 8px rgba(12, 113, 198, 0.3),
+        inset 0 4px 8px rgba(255, 255, 255, 0.9);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 10;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+.aero-button:hover {
+    transform: translateX(-50%) scale(1.05);
+}
+
+.aero-button:active {
+    transform: translateX(-50%) scale(0.95);
+}
+
+/* --- СЧЁТЧИК --- */
+.score-counter {
+    position: absolute;
+    top: 30px;
+    left: 30px;
+    padding: 10px 25px;
+    font-size: 20px;
+    font-weight: bold;
+    color: #0c71c6;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    border-radius: 30px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+}

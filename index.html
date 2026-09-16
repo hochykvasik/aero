@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frutiger Aero Bubbles</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Водный фон -->
+    <div class="water-background">
+        <!-- Световые блики -->
+        <div class="water-glow glow-1"></div>
+        <div class="water-glow glow-2"></div>
+        <div class="water-glow glow-3"></div>
+        <!-- Волны на воде (SVG-линии) -->
+        <svg class="water-waves" viewBox="0 0 1200 800" preserveAspectRatio="none">
+            <path d="M0,400 Q300,380 600,400 T1200,400" stroke="rgba(255,255,255,0.15)" stroke-width="2" fill="none"/>
+            <path d="M0,450 Q300,430 600,450 T1200,450" stroke="rgba(255,255,255,0.1)" stroke-width="2" fill="none"/>
+            <path d="M0,500 Q300,480 600,500 T1200,500" stroke="rgba(255,255,255,0.08)" stroke-width="2" fill="none"/>
+            <path d="M0,550 Q300,530 600,550 T1200,550" stroke="rgba(255,255,255,0.06)" stroke-width="2" fill="none"/>
+        </svg>
+    </div>
+
+    <!-- Холст для пузырей и волн -->
+    <canvas id="bubbleCanvas"></canvas>
+
+    <!-- Кнопка кликера -->
+    <button id="popAllBtn" class="aero-button">
+        ✨ Лопнуть все пузыри ✨
+    </button>
+
+    <!-- Счётчик -->
+    <div class="score-counter">
+        Лопнуто: <span id="score">0</span>
+    </div>
+
+    <!-- Звук лопания (файл pop.mp3 лежит в той же папке, что и index.html) -->
+    <audio id="popSound" src="pop.mp3" preload="auto"></audio>
+
+    <script src="script.js"></script>
+</body>
+</html>
