@@ -95,31 +95,33 @@ float coreGlow = smoothstep(0.12, 0.0, distToMouse) * 0.25;
 finalColor += vec3(mouseGlow * 0.8, mouseGlow * 0.45, mouseGlow * 0.4);
 finalColor += vec3(coreGlow * 0.6, coreGlow * 0.8, coreGlow * 0.95);
             
-            // ===== ЛЁД (накладывается поверх воды) =====
             if (u_iceIntensity > 0.01) {
-                vec2 iceUV = tileUV * 2.0;
-                iceUV.x += u_time * 0.005;
-                iceUV.y += u_time * 0.004;
-                vec3 iceNormal = texture2D(u_iceNormal, iceUV).rgb * 2.0 - 1.0;
-                
-                vec2 iceDistorted = tileUV + iceNormal.xy * 0.06;
-                iceDistorted *= 2.5;
-                vec3 iceColor = texture2D(u_iceColor, iceDistorted).rgb;
-                
-                // Лёд темнее и насыщеннее
-vec3 blueIce = iceColor * vec3(0.4, 0.6, 1.1);
-
-// Приглушаем яркость
-blueIce *= 0.61;
-
-float iceShine = pow(max(0.0, iceNormal.z), 6.0);
-blueIce += vec3(iceShine * 0.4, iceShine * 0.55, iceShine * 0.8);
-
-float iceCracks = length(iceNormal.xy);
-blueIce += vec3(iceCracks * 0.15, iceCracks * 0.25, iceCracks * 0.35);
-
-// Накладываем с правильным блендингом — multiply
-finalColor = mix(finalColor, finalColor * blueIce + blueIce * 0.35, u_iceIntensity);
+    vec2 iceUV = tileUV * 2.0;
+    iceUV.x += u_time * 0.005;
+    iceUV.y += u_time * 0.004;
+    vec3 iceNormal = texture2D(u_iceNormal, iceUV).rgb * 2.0 - 1.0;
+    
+    vec2 iceDistorted = tileUV + iceNormal.xy * 0.06;
+    iceDistorted *= 2.5;
+    vec3 iceColor = texture2D(u_iceColor, iceDistorted).rgb;
+    
+    // Убавили множители — лёд становится приглушённым
+    vec3 blueIce = iceColor * vec3(0.75, 0.95, 1.25);
+    
+    // Меньше белого смешивания (было 0.4)
+    blueIce = mix(blueIce, vec3(0.6, 0.75, 0.9), 0.25);
+    
+    // Блики слабее
+    float iceShine = pow(max(0.0, iceNormal.z), 6.0);
+    blueIce += vec3(iceShine * 0.5, iceShine * 0.6, iceShine * 0.7);
+    
+    // Трещины умеренные
+    float iceCracks = length(iceNormal.xy);
+    blueIce += vec3(iceCracks * 0.3, iceCracks * 0.4, iceCracks * 0.5);
+    
+    // Затемняем финал (было blueIce * 0.85)
+    vec3 blended = finalColor * 0.4 + blueIce * 0.7;
+    finalColor = mix(finalColor, blended, u_iceIntensity);
 }
 
             // Виньетка
