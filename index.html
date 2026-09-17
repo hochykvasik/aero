@@ -2,42 +2,147 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Frutiger Aero Bubbles</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Frutiger Aero Relax</title>
+    <link rel="icon" type="image/png" href="favicon.png">
     <link rel="stylesheet" href="style.css">
+    <link rel="apple-touch-icon" href="favicon.png">
 </head>
 <body>
-    <!-- Водный фон -->
-    <div class="water-background">
-        <!-- Световые блики -->
-        <div class="water-glow glow-1"></div>
-        <div class="water-glow glow-2"></div>
-        <div class="water-glow glow-3"></div>
-        <!-- Волны на воде (SVG-линии) -->
-        <svg class="water-waves" viewBox="0 0 1200 800" preserveAspectRatio="none">
-            <path d="M0,400 Q300,380 600,400 T1200,400" stroke="rgba(255,255,255,0.15)" stroke-width="2" fill="none"/>
-            <path d="M0,450 Q300,430 600,450 T1200,450" stroke="rgba(255,255,255,0.1)" stroke-width="2" fill="none"/>
-            <path d="M0,500 Q300,480 600,500 T1200,500" stroke="rgba(255,255,255,0.08)" stroke-width="2" fill="none"/>
-            <path d="M0,550 Q300,530 600,550 T1200,550" stroke="rgba(255,255,255,0.06)" stroke-width="2" fill="none"/>
-        </svg>
+    <!-- ИГРА 1: ПУЗЫРИ -->
+     <!-- Кнопка переключения день/ночь -->
+
+    <div id="bubblesGame" class="game active">
+        <div class="pool-background">
+            <!-- WebGL-слой воды -->
+            <canvas id="waterCanvas"></canvas>
+            <!-- Fallback: если WebGL не поддерживается -->
+            <div class="pool-fallback">
+                <div class="pool-tiles">
+                    <div class="tile-grid"></div>
+                    <div class="tile-grid-distorted"></div>
+                </div>
+                <div class="pool-water"></div>
+                <div class="pool-caustics"></div>
+            </div>
+        </div>
+        <canvas id="bubbleCanvas"></canvas>
+        <button id="popAllBtn" class="win-btn pop-all-btn"> Лопнуть все пузыри </button>
+        <div class="score-counter bubbles-score">Лопнуто: <span id="scoreBubbles">0</span></div>
     </div>
 
-    <!-- Холст для пузырей и волн -->
-    <canvas id="bubbleCanvas"></canvas>
-
-    <!-- Кнопка кликера -->
-    <button id="popAllBtn" class="aero-button">
-        ✨ Лопнуть все пузыри ✨
-    </button>
-
-    <!-- Счётчик -->
-    <div class="score-counter">
-        Лопнуто: <span id="score">0</span>
+    <!-- ИГРА 2: ОКНА -->
+    <div id="windowsGame" class="game">
+<div class="xp-background">
+    <div class="xp-sky"></div>
+    <div class="xp-clouds-2"></div>
+    <div class="xp-hill-back"></div>
+    <div class="xp-hill"></div>
+    <div class="xp-cloud-shadows"></div>
+    <div class="xp-sun">
+    <div class="xp-sun-rainbow"></div>
+    <div class="xp-sun-rays xp-sun-rays-1"></div>
+    <div class="xp-sun-rays xp-sun-rays-2"></div>
+    <div class="xp-sun-rays xp-sun-rays-3"></div>
+    <div class="xp-sun-halo"></div>
+    <div class="xp-sun-core"></div>
+    <div class="xp-moon"></div>
+</div>
+    <div class="xp-clouds"></div>
+</div>
+</div>
+        <div class="score-counter windows-score">Закрыто: <span id="scoreWindows">0</span></div>
     </div>
 
-    <!-- Звук лопания (файл pop.mp3 лежит в той же папке, что и index.html) -->
-    <audio id="popSound" src="pop.mp3" preload="auto"></audio>
+    <!-- ИГРА 3: БРАУЗЕР -->
+    <div id="browserGame" class="game">
+        <div class="browser-container">
+            <div class="browser-toolbar">
+                <div class="browser-nav-buttons">
+                    <button class="browser-nav-btn" id="btnBack" title="Назад">◀</button>
+                    <button class="browser-nav-btn" id="btnForward" title="Вперёд">▶</button>
+                    <button class="browser-nav-btn" id="btnRefresh" title="Обновить">⟳</button>
+                </div>
+                <div class="browser-address">
+                    <span class="browser-address-lock">🔒</span>
+                    <span class="browser-address-text">http://memes.ru/</span>
+                </div>
+                <div class="browser-counter"> MEME: <span id="memeScore">0</span></div>
+                <button class="paint-tab-btn" id="paintTabBtn" style="display:none;" title="Paint">🎨</button>
+            </div>
+            <div class="browser-page" id="browserPage"></div>
+        </div>
+    </div>
 
+    <!-- ОКНО PAINT -->
+    <div id="paintModal" class="paint-modal">
+        <div class="paint-window">
+            <div class="paint-titlebar">
+                <span class="paint-title">Paint — Секретная вкладка</span>
+                <button class="paint-close" id="paintClose">✕</button>
+            </div>
+            <div class="paint-body">
+                <div class="paint-tools">
+                    <div class="paint-colors" id="paintColors"></div>
+                    <div class="paint-sizes">
+                        <button class="paint-size-btn active" data-size="2">●</button>
+                        <button class="paint-size-btn" data-size="6">●</button>
+                        <button class="paint-size-btn" data-size="14">●</button>
+                    </div>
+                    <button class="paint-clear-btn" id="paintClear">Очистить</button>
+                </div>
+                <canvas id="paintCanvas" width="500" height="350"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- СИНИЙ ЭКРАН СМЕРТИ -->
+    <div id="bsod" class="bsod-screen">
+        <div class="bsod-content">
+            <div class="bsod-smiley">:(</div>
+            <div class="bsod-title">Упс, кажется это вирус!</div>
+            <div class="bsod-text">Все мемы потеряны. Перезагрузка...</div>
+            <div class="bsod-progress"><div class="bsod-progress-bar" id="bsodProgress"></div></div>
+        </div>
+    </div>
+
+    <!-- УВЕДОМЛЕНИЕ О PAINT -->
+    <div id="paintNotification" class="paint-notification">
+        🎨 Открыта секретная вкладка - Paint!
+    </div>
+
+    <!-- ПЕРЕКЛЮЧАТЕЛЬ ИГР -->
+    <div class="mode-switcher">
+        <button id="dayNightToggle" class="day-night-btn" title="Переключить день/ночь">☀</button>
+        <button id="modeBubbles" class="win-btn active">🫧 Пузыри</button>
+        <button id="modeWindows" class="win-btn">⚠️ Окна</button>
+        <button id="modeBrowser" class="win-btn">🖥️ Браузер</button>
+    </div>
+
+    <!-- ЗВУКИ -->
+    <audio id="popSoundSmall" src="sounds/pop-small.mp3" preload="auto"></audio>
+    <audio id="popSoundFallback" src="sounds/pop.mp3" preload="auto"></audio>
+    <audio id="clickSound1" src="sounds/click1.mp3" preload="auto"></audio>
+    <audio id="clickSound2" src="sounds/click2.mp3" preload="auto"></audio>
+    <audio id="clickSound3" src="sounds/click3.mp3" preload="auto"></audio>
+    <audio id="clickFallback" src="sounds/pop.mp3" preload="auto"></audio>
+    <audio id="menuSound" src="sounds/menusound.mp3" preload="auto"></audio>
+    <audio id="menuFallback" src="sounds/pop.mp3" preload="auto"></audio>
+    <audio id="catSound" src="sounds/miau-kotika.mp3" preload="auto"></audio>
+    <audio id="memeSound1" src="sounds/meme1.mp3" preload="auto"></audio>
+    <audio id="memeSound2" src="sounds/meme2.mp3" preload="auto"></audio>
+    <audio id="memeSound3" src="sounds/meme3.mp3" preload="auto"></audio>
+    <audio id="memeSound4" src="sounds/meme4.mp3" preload="auto"></audio>
+    <audio id="memeSound5" src="sounds/meme5.mp3" preload="auto"></audio>
+    <audio id="adOpenSound" src="sounds/ad-open.mp3" preload="auto"></audio>
+    <audio id="adCloseSound" src="sounds/ad-close.mp3" preload="auto"></audio>
+    <audio id="virusWinSound" src="sounds/virus-win.mp3" preload="auto"></audio>
+    <audio id="virusLoseSound" src="sounds/virus-lose.mp3" preload="auto"></audio>
+    <audio id="ambientMusic" src="sounds/Yume_2kki_OST_-_Lotus_Waters_76578992.mp3" loop preload="auto"></audio>
+<audio id="catSound2" src="sounds/meow2.mp3" preload="auto"></audio>
+
+    <!-- WebGL-вода -->
+    <script src="webgl-water.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

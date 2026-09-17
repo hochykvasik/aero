@@ -1,165 +1,1717 @@
+/* ============================================
+   ШРИФТ HOME VIDEO
+   ============================================ */
+@font-face {
+    font-family: 'HomeVideo';
+    src: url('fonts/HomeVideo-Regular.otf') format('opentype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
     overflow: hidden;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'HomeVideo', 'Nunito', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select: none;
+    user-select: none;
+    touch-action: none;
 }
 
 html, body {
     width: 100%;
     height: 100%;
-    background: transparent;
+    background: #000;
 }
 
-body {
-    position: relative;
+body { position: relative; }
+
+/* ============================================
+   ИГРЫ
+   ============================================ */
+.game {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+    z-index: 1;
+}
+.game.active { opacity: 1; visibility: visible; }
+
+/* ============================================
+   ФОН ПУЗЫРЕЙ
+   ============================================ */
+.pool-background {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    overflow: hidden;
+    background: #5bb8d4;
 }
 
-/* --- ВОДНЫЙ ФОН --- */
-.water-background {
+#waterCanvas {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: -3;
-    
-    /* Подводный градиент: голубой сверху, зелёный снизу */
-    background: linear-gradient(
-        175deg,
-        #4fc3f7 0%,      /* Светло-голубой (поверхность воды) */
-        #74e4ff 15%,     
-        #5bc8e8 30%,     
-        #7dd87a 55%,     /* Плавный переход к зелени */
-        #86e750 70%,     /* Inchworm */
-        #6ab63f 88%,     /* Fresh Cut Grass */
-        #4a8a2a 100%     /* Тёмно-зелёное дно */
+    display: block;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.pool-fallback {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    display: none;
+}
+.pool-fallback.active { display: block; }
+
+.pool-tiles {
+    position: absolute;
+    top: -10%; left: -10%;
+    width: 120%; height: 120%;
+    background-color: #f0f8fc;
+}
+.tile-grid, .tile-grid-distorted {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-image:
+        repeating-linear-gradient(90deg,
+            transparent 0px, transparent 68px,
+            rgba(30, 50, 60, 0.9) 68px, rgba(30, 50, 60, 0.9) 72px
+        ),
+        repeating-linear-gradient(0deg,
+            transparent 0px, transparent 68px,
+            rgba(30, 50, 60, 0.9) 68px, rgba(30, 50, 60, 0.9) 72px
+        );
+}
+.pool-water {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: linear-gradient(135deg,
+        rgba(90, 210, 230, 0.55) 0%,
+        rgba(70, 190, 220, 0.5) 25%,
+        rgba(120, 220, 200, 0.45) 50%,
+        rgba(70, 190, 220, 0.5) 75%,
+        rgba(90, 210, 230, 0.55) 100%
+    );
+    background-size: 400% 400%;
+    animation: waterFlow 20s ease-in-out infinite;
+    mix-blend-mode: multiply;
+}
+@keyframes waterFlow {
+    0%   { background-position: 0% 0%; }
+    50%  { background-position: 100% 100%; }
+    100% { background-position: 0% 0%; }
+}
+.pool-caustics {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-image:
+        radial-gradient(circle at 15% 25%, rgba(255,255,255,0.5) 0%, transparent 8%),
+        radial-gradient(circle at 45% 15%, rgba(255,255,255,0.4) 0%, transparent 6%),
+        radial-gradient(circle at 75% 35%, rgba(255,255,255,0.45) 0%, transparent 7%),
+        radial-gradient(circle at 25% 60%, rgba(255,255,255,0.4) 0%, transparent 9%),
+        radial-gradient(circle at 60% 75%, rgba(255,255,255,0.5) 0%, transparent 8%),
+        radial-gradient(circle at 85% 55%, rgba(255,255,255,0.35) 0%, transparent 6%),
+        radial-gradient(circle at 10% 85%, rgba(255,255,255,0.4) 0%, transparent 7%),
+        radial-gradient(circle at 50% 50%, rgba(255,255,255,0.3) 0%, transparent 5%);
+    filter: blur(3px);
+    animation: causticsMove 15s ease-in-out infinite alternate;
+    mix-blend-mode: screen;
+    pointer-events: none;
+}
+@keyframes causticsMove {
+    0%   { transform: translate(0, 0) scale(1); }
+    50%  { transform: translate(-25px, 15px) scale(1.05); }
+    100% { transform: translate(25px, -15px) scale(0.98); }
+}
+
+/* ============================================
+   ФОН ОКНОВ — WINDOWS XP
+   ============================================ */
+.xp-background {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    overflow: hidden;
+    background: #2878cc;
+}
+
+.xp-sky {
+    position: absolute;
+    top: -10%; left: -10%;
+    width: 120%; height: 120%;
+    background: linear-gradient(to bottom,
+        #083e9b 0%,
+        #0950bb 15%,
+        #2878cc 35%,
+        #4a9cdd 55%,
+        #7cbfe8 75%,
+        #b5ddf5 90%,
+        #d4eeff 100%
+    );
+    will-change: transform;
+}
+
+/* Задний холм (справа, ниже) */
+.xp-hill-back {
+    position: absolute;
+    bottom: -3%;
+    left: 40%;
+    width: 120%;
+    height: 38%;
+    background: linear-gradient(to bottom,
+        #4a9e1e 0%,
+        #3d8a18 40%,
+        #307012 70%,
+        #265a0d 100%
+    );
+    border-radius: 45% 70% 0 0 / 55% 80% 0 0;
+    box-shadow: 
+        inset 0 40px 70px rgba(180, 240, 120, 0.3),
+        inset 0 -30px 70px rgba(20, 40, 10, 0.55);
+    transform: scaleX(1.3) scaleY(1.0);
+    transform-origin: center bottom;
+    will-change: transform;
+    z-index: 4;
+}
+
+/* Основной холм — плавная дуга с верхушкой слева */
+.xp-hill {
+    position: absolute;
+    bottom: -8%;
+    left: -100%;
+    width: 200%;
+    height: 40%;
+    background: 
+        radial-gradient(ellipse 35% 45% at 22% 10%, rgba(229, 255, 123, 0.678) 0%, transparent 20%),
+        radial-gradient(ellipse 30% 38% at 45% 25%, rgba(210, 255, 150, 0.45) 0%, transparent 70%),
+        radial-gradient(ellipse 25% 30% at 65% 50%, rgba(190, 245, 130, 0.3) 0%, transparent 70%),
+        radial-gradient(ellipse 45% 30% at 15% 85%, rgba(20, 50, 10, 0.35) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 28% at 60% 90%, rgba(20, 50, 10, 0.3) 0%, transparent 70%),
+        linear-gradient(to bottom,
+            #b8e252 0%,
+            #98d23a 15%,
+            #7abb2a 40%,
+            #5c9c1c 70%,
+            #3d7012 100%
+        );
+    border-radius: 85% 15% 0 0 / 95% 25% 0 0;
+    box-shadow: 
+        inset 0 70px 120px rgba(235, 255, 185, 0.5),
+        inset 0 -50px 120px rgba(20, 50, 10, 0.55);
+    transform: scaleX(1.3) scaleY(1.0);
+    transform-origin: center bottom;
+    will-change: transform;
+    z-index: 5;
+}
+
+/* Тени облаков на холме */
+.xp-cloud-shadows {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 120%;
+    height: 45%;
+    z-index: 6;
+    pointer-events: none;
+    background-image:
+        radial-gradient(ellipse 200px 45px at 15% 55%, rgba(20, 50, 10, 0.35) 0%, transparent 70%),
+        radial-gradient(ellipse 240px 55px at 40% 65%, rgba(20, 50, 10, 0.3) 0%, transparent 70%),
+        radial-gradient(ellipse 180px 40px at 65% 60%, rgba(20, 50, 10, 0.32) 0%, transparent 70%),
+        radial-gradient(ellipse 220px 50px at 85% 70%, rgba(20, 50, 10, 0.28) 0%, transparent 70%);
+    filter: blur(18px);
+    mix-blend-mode: multiply;
+    opacity: 0.85;
+    will-change: transform, margin;
+}
+
+/* ===== СОЛНЦЕ ===== */
+.xp-sun {
+    position: absolute;
+    top: 8%;
+    right: 18%;
+    width: 800px;
+    height: 800px;
+    margin: -400px -400px 0 0;  /* компенсируем увеличение */
+    pointer-events: none;
+    z-index: 6;
+    will-change: transform;
+    transform-origin: center center;
+}
+
+/* Радужный ореол — вращается и пульсирует */
+.xp-sun-rainbow {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 260px; height: 260px;
+    margin: -130px 0 0 -130px;
+    border-radius: 50%;
+    background: conic-gradient(
+        from 0deg,
+        rgba(255, 100, 150, 0.22),
+        rgba(255, 200, 100, 0.22),
+        rgba(255, 255, 150, 0.22),
+        rgba(150, 255, 150, 0.22),
+        rgba(100, 200, 255, 0.22),
+        rgba(150, 100, 255, 0.22),
+        rgba(255, 100, 200, 0.22),
+        rgba(255, 100, 150, 0.22)
+    );
+    filter: blur(18px);
+    animation: rainbowRotate 25s linear infinite, rainbowPulse 4s ease-in-out infinite;
+    opacity: 0.75;
+}
+
+@keyframes rainbowRotate {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+@keyframes rainbowPulse {
+    0%, 100% { opacity: 0.6; }
+    50%      { opacity: 0.9; }
+}
+
+/* Лучи — пульсируют и вращаются */
+/* ===== ЛУЧИ — 3 СЛОЯ С РАЗНОЙ ПУЛЬСАЦИЕЙ ===== */
+
+/* Общие стили для всех лучей */
+.xp-sun-rays {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 700px; height: 700px;
+    margin: -350px 0 0 -350px;
+    border-radius: 50%;
+    mask-image: radial-gradient(circle, black 0%, black 25%, transparent 60%);
+    -webkit-mask-image: radial-gradient(circle, black 0%, black 25%, transparent 60%);
+    filter: blur(2px);
+    pointer-events: none;
+}
+
+/* ===== ЛУЧИ СОЛНЦА (днём) ===== */
+.xp-sun-rays {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 700px; height: 700px;
+    margin: -350px 0 0 -350px;
+    border-radius: 50%;
+    pointer-events: none;
+    mask-image: radial-gradient(circle at center,
+        transparent 0%,
+        transparent 12%,
+        black 25%,
+        black 45%,
+        transparent 90%
+    );
+    -webkit-mask-image: radial-gradient(circle at center,
+        transparent 0%,
+        transparent 12%,
+        black 25%,
+        black 45%,
+        transparent 90%
+    );
+    filter: blur(2px);
+    transition: opacity 0.8s ease, filter 0.8s ease;
+}
+
+/* Солнечные лучи (жёлтые) — днём */
+.xp-sun-rays-1 {
+    background: repeating-conic-gradient(
+        from 0deg,
+        rgba(255, 245, 210, 0.6) 0deg,
+        rgba(255, 245, 210, 0.6) 2deg,
+        transparent 2deg,
+        transparent 15deg
+    );
+    animation: raysPulse1 5s ease-in-out infinite, raysRotate1 80s linear infinite;
+}
+.xp-sun-rays-2 {
+    background: repeating-conic-gradient(
+        from 8deg,
+        rgba(255, 250, 220, 0.45) 0deg,
+        rgba(255, 250, 220, 0.45) 1.5deg,
+        transparent 1.5deg,
+        transparent 22deg
+    );
+    animation: raysPulse2 3.5s ease-in-out infinite, raysRotate2 60s linear infinite reverse;
+}
+.xp-sun-rays-3 {
+    background: repeating-conic-gradient(
+        from 15deg,
+        rgba(255, 240, 190, 0.35) 0deg,
+        rgba(255, 240, 190, 0.35) 1deg,
+        transparent 1deg,
+        transparent 35deg
+    );
+    animation: raysPulse3 7s ease-in-out infinite, raysRotate3 110s linear infinite;
+}
+
+/* ===== НОЧЬЮ — ЛУЧИ ЛУНЫ (СИНИЕ) ===== */
+body.night-mode .xp-sun-rays-1 {
+    background: repeating-conic-gradient(
+        from 0deg,
+        rgba(180, 210, 255, 0.55) 0deg,
+        rgba(180, 210, 255, 0.55) 2deg,
+        transparent 2deg,
+        transparent 15deg
+    );
+}
+body.night-mode .xp-sun-rays-2 {
+    background: repeating-conic-gradient(
+        from 8deg,
+        rgba(160, 200, 255, 0.4) 0deg,
+        rgba(160, 200, 255, 0.4) 1.5deg,
+        transparent 1.5deg,
+        transparent 22deg
+    );
+}
+body.night-mode .xp-sun-rays-3 {
+    background: repeating-conic-gradient(
+        from 15deg,
+        rgba(140, 190, 255, 0.3) 0deg,
+        rgba(140, 190, 255, 0.3) 1deg,
+        transparent 1deg,
+        transparent 35deg
     );
 }
 
-/* --- СВЕТОВЫЕ БЛИКИ --- */
-.water-glow {
+/* Пульсации с разной амплитудой и фазой */
+@keyframes raysPulse1 {
+    0%, 100% { transform: scale(1);    opacity: 0.55; }
+    50%      { transform: scale(1.35); opacity: 1; }
+}
+@keyframes raysPulse2 {
+    0%, 100% { transform: scale(1.15); opacity: 0.7; }
+    30%      { transform: scale(1);    opacity: 0.45; }
+    70%      { transform: scale(1.25); opacity: 0.9; }
+}
+@keyframes raysPulse3 {
+    0%, 100% { transform: scale(1.05); opacity: 0.35; }
+    40%      { transform: scale(1.4);  opacity: 0.65; }
+    75%      { transform: scale(0.95); opacity: 0.25; }
+}
+
+/* Вращения с разными скоростями */
+@keyframes raysRotate1 {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+@keyframes raysRotate2 {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(-360deg); }
+}
+@keyframes raysRotate3 {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+/* Жёлтый ореол — пульсирует */
+.xp-sun-halo {
     position: absolute;
+    top: 50%; left: 50%;
+    width: 200px; height: 200px;
+    margin: -100px 0 0 -100px;
     border-radius: 50%;
-    filter: blur(90px);
-    pointer-events: none;
+    background: radial-gradient(circle,
+        rgba(255, 250, 220, 0.95) 0%,
+        rgba(255, 240, 170, 0.7) 25%,
+        rgba(255, 230, 130, 0.4) 55%,
+        transparent 90%
+    );
+    filter: blur(12px);
+    animation: haloPulse 4s ease-in-out infinite;
+}
+@keyframes haloPulse {
+    0%, 100% { transform: scale(1); opacity: 0.9; }
+    50%      { transform: scale(1.15); opacity: 1; }
 }
 
-.glow-1 {
-    width: 500px;
-    height: 500px;
-    top: -100px;
-    left: 5%;
-    background: radial-gradient(circle, rgba(255,255,255,0.6) 0%, transparent 70%);
-    animation: glowFloat1 18s infinite alternate ease-in-out;
-}
-
-.glow-2 {
-    width: 600px;
-    height: 600px;
-    top: 25%;
-    right: -150px;
-    background: radial-gradient(circle, rgba(116, 228, 255, 0.7) 0%, transparent 70%);
-    animation: glowFloat2 22s infinite alternate-reverse ease-in-out;
-}
-
-.glow-3 {
-    width: 700px;
-    height: 700px;
-    bottom: -200px;
-    left: 25%;
-    background: radial-gradient(circle, rgba(134, 231, 80, 0.6) 0%, transparent 70%);
-    animation: glowFloat3 28s infinite alternate ease-in-out;
-}
-
-@keyframes glowFloat1 {
-    0% { transform: translate(0, 0) scale(1); opacity: 0.5; }
-    100% { transform: translate(80px, -50px) scale(1.15); opacity: 0.8; }
-}
-
-@keyframes glowFloat2 {
-    0% { transform: translate(0, 0) scale(1); opacity: 0.6; }
-    100% { transform: translate(-70px, 60px) scale(1.1); opacity: 0.4; }
-}
-
-@keyframes glowFloat3 {
-    0% { transform: translate(0, 0) scale(1); opacity: 0.4; }
-    100% { transform: translate(60px, -30px) scale(1.2); opacity: 0.7; }
-}
-
-/* --- ВОЛНЫ НА ВОДЕ (SVG) --- */
-.water-waves {
+/* Ядро — пульсирует */
+.xp-sun-core {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    top: 50%; left: 50%;
+    width: 80px; height: 80px;
+    margin: -40px 0 0 -40px;
+    border-radius: 50%;
+    background: radial-gradient(circle,
+        #ffffff 0%,
+        #fffff0 40%,
+        rgba(255, 250, 200, 0.95) 70%,
+        rgba(255, 240, 180, 0.6) 100%
+    );
+    box-shadow: 
+        0 0 40px rgba(255, 250, 200, 0.9),
+        0 0 80px rgba(255, 240, 150, 0.5);
+    filter: blur(1px);
+    animation: corePulse 4s ease-in-out infinite;
+}
+@keyframes corePulse {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.15); }
+}
+
+/* ===== ОБЛАКА ===== */
+/* ===== ОБЛАКА ===== */
+.xp-clouds,
+.xp-clouds-2 {
+    position: absolute;
+    top: 0; left: 0;
+    width: 200%;      /* две ширины экрана — для бесшовного цикла */
+    height: 70%;
     pointer-events: none;
-    animation: waveShift 12s infinite ease-in-out;
+    will-change: transform, margin;
+    background-repeat: repeat-x;  /* повтор по горизонтали */
 }
 
-@keyframes waveShift {
-    0% { transform: translate(0, 0); }
-    50% { transform: translate(-15px, 8px); }
-    100% { transform: translate(0, 0); }
+.xp-clouds {
+    background-size: 2000px 100%;
+    background-repeat: repeat-x;
+    animation: cloudDriftLeft 140s linear infinite;
 }
 
-/* --- ХОЛСТ --- */
+.xp-clouds-2 {
+    background-size: 2500px 100%;
+    background-repeat: repeat-x;
+    animation: cloudDriftLeft 220s linear infinite;
+    opacity: 0.6;
+}
+
+/* Плывут ВЛЕВО: от 0 к -50% (левая половина уходит за экран, правая встаёт на её место) */
+@keyframes cloudDriftLeft {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+}
+
+.xp-clouds {
+    background-image:
+        radial-gradient(circle 60px at 100px 80px, #ffffff 0%, #ffffff 50%, transparent 100%),
+        radial-gradient(circle 80px at 160px 90px, #ffffff 0%, #ffffff 50%, transparent 100%),
+        radial-gradient(circle 55px at 220px 85px, #ffffff 0%, #ffffff 50%, transparent 100%),
+        radial-gradient(circle 50px at 60px 95px, #ffffff 0%, #ffffff 50%, transparent 100%),
+        radial-gradient(circle 65px at 250px 95px, #ffffff 0%, #ffffff 50%, transparent 100%),
+        radial-gradient(circle 110px at 170px 105px, rgba(255,255,255,0.55) 0%, transparent 70%),
+        radial-gradient(ellipse 150px 30px at 160px 135px, rgba(50, 90, 140, 0.3) 0%, transparent 70%),
+        
+        radial-gradient(circle 45px at 500px 50px, #ffffff 0%, #ffffff 50%, transparent 100%),
+        radial-gradient(circle 60px at 550px 60px, #ffffff 0%, #ffffff 50%, transparent 100%),
+        radial-gradient(circle 40px at 590px 55px, #ffffff 0%, #ffffff 50%, transparent 100%),
+        radial-gradient(circle 80px at 550px 70px, rgba(255,255,255,0.5) 0%, transparent 70%),
+        radial-gradient(ellipse 110px 22px at 550px 95px, rgba(50, 90, 140, 0.25) 0%, transparent 70%),
+        
+        radial-gradient(circle 70px at 800px 120px, #ffffff 0%, #ffffff 50%, transparent 100%),
+        radial-gradient(circle 95px at 880px 130px, #ffffff 0%, #ffffff 50%, transparent 100%),
+        radial-gradient(circle 65px at 950px 125px, #ffffff 0%, #ffffff 50%, transparent 100%),
+        radial-gradient(circle 55px at 750px 135px, #ffffff 0%, #ffffff 50%, transparent 100%),
+        radial-gradient(circle 60px at 1010px 130px, #ffffff 0%, #ffffff 50%, transparent 100%),
+        radial-gradient(circle 130px at 880px 145px, rgba(255,255,255,0.55) 0%, transparent 70%),
+        radial-gradient(ellipse 180px 35px at 880px 185px, rgba(50, 90, 140, 0.3) 0%, transparent 70%),
+        
+        radial-gradient(circle 40px at 1200px 90px, #ffffff 0%, #ffffff 50%, transparent 100%),
+        radial-gradient(circle 55px at 1240px 100px, #ffffff 0%, #ffffff 50%, transparent 100%),
+        radial-gradient(circle 45px at 1290px 95px, #ffffff 0%, #ffffff 50%, transparent 100%),
+        radial-gradient(circle 70px at 1245px 110px, rgba(255,255,255,0.5) 0%, transparent 70%),
+        radial-gradient(ellipse 100px 20px at 1245px 130px, rgba(50, 90, 140, 0.25) 0%, transparent 70%),
+        
+        radial-gradient(circle 85px at 1450px 60px, #ffffff 0%, #ffffff 50%, transparent 100%),
+        radial-gradient(circle 110px at 1530px 75px, #ffffff 0%, #ffffff 50%, transparent 100%),
+        radial-gradient(circle 75px at 1610px 70px, #ffffff 0%, #ffffff 50%, transparent 100%),
+        radial-gradient(circle 65px at 1400px 80px, #ffffff 0%, #ffffff 50%, transparent 100%),
+        radial-gradient(circle 150px at 1530px 90px, rgba(255,255,255,0.5) 0%, transparent 70%),
+        radial-gradient(ellipse 210px 40px at 1530px 130px, rgba(50, 90, 140, 0.3) 0%, transparent 70%),
+        
+        radial-gradient(circle 35px at 1850px 130px, #ffffff 0%, #ffffff 50%, transparent 100%),
+        radial-gradient(circle 50px at 1900px 140px, #ffffff 0%, #ffffff 50%, transparent 100%),
+        radial-gradient(circle 40px at 1945px 135px, #ffffff 0%, #ffffff 50%, transparent 100%),
+        radial-gradient(circle 65px at 1900px 150px, rgba(255,255,255,0.5) 0%, transparent 70%),
+        radial-gradient(ellipse 90px 18px at 1900px 170px, rgba(50, 90, 140, 0.25) 0%, transparent 70%);
+    filter: blur(2.5px);
+}
+
+.xp-clouds-2 {
+    background-image:
+        radial-gradient(circle 40px at 300px 180px, #ffffff 0%, #ffffff 50%, transparent 100%),
+        radial-gradient(circle 55px at 360px 190px, #ffffff 0%, #ffffff 50%, transparent 100%),
+        radial-gradient(circle 45px at 420px 185px, #ffffff 0%, #ffffff 50%, transparent 100%),
+        radial-gradient(circle 75px at 360px 200px, rgba(255,255,255,0.45) 0%, transparent 70%),
+        
+        radial-gradient(circle 50px at 700px 200px, #ffffff 0%, #ffffff 50%, transparent 100%),
+        radial-gradient(circle 65px at 760px 210px, #ffffff 0%, #ffffff 50%, transparent 100%),
+        radial-gradient(circle 48px at 820px 205px, #ffffff 0%, #ffffff 50%, transparent 100%),
+        radial-gradient(circle 85px at 760px 220px, rgba(255,255,255,0.45) 0%, transparent 70%),
+        
+        radial-gradient(circle 45px at 1100px 160px, #ffffff 0%, #ffffff 50%, transparent 100%),
+        radial-gradient(circle 60px at 1160px 170px, #ffffff 0%, #ffffff 50%, transparent 100%),
+        radial-gradient(circle 50px at 1220px 165px, #ffffff 0%, #ffffff 50%, transparent 100%),
+        radial-gradient(circle 80px at 1160px 180px, rgba(255,255,255,0.45) 0%, transparent 70%),
+        
+        radial-gradient(circle 38px at 1550px 190px, #ffffff 0%, #ffffff 50%, transparent 100%),
+        radial-gradient(circle 52px at 1600px 200px, #ffffff 0%, #ffffff 50%, transparent 100%),
+        radial-gradient(circle 42px at 1650px 195px, #ffffff 0%, #ffffff 50%, transparent 100%),
+        radial-gradient(circle 70px at 1600px 210px, rgba(255,255,255,0.45) 0%, transparent 70%);
+    filter: blur(5px);
+}
+
+/* ============================================
+   ХОЛСТ
+   ============================================ */
 canvas {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    cursor: crosshair;
-    z-index: 1;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
     background: transparent;
+    cursor: crosshair;
+    z-index: 2;
 }
 
-/* --- КНОПКА --- */
-.aero-button {
+#bubbleCanvas {
+    z-index: 2;
+}
+
+#paintCanvas {
+    position: static;
+    background: #fff;
+    border: 1px solid #5a8fc9;
+    border-radius: 4px;
+    cursor: crosshair;
+}
+
+/* ============================================
+   КНОПКИ WINDOWS 7
+   ============================================ */
+.win-btn {
+    padding: 8px 22px;
+    font-family: 'HomeVideo', sans-serif;
+    font-size: 16px;
+    letter-spacing: 0.5px;
+    color: #1a3a5c;
+    background: linear-gradient(to bottom, #f5faff 0%, #dceaf6 45%, #c8ddec 50%, #e6f2fb 100%);
+    border: 1px solid #6a9fd4;
+    border-radius: 4px;
+    box-shadow:
+        0 1px 2px rgba(0,0,0,0.15),
+        inset 0 1px 0 rgba(255,255,255,0.9),
+        inset 0 -1px 0 rgba(12,113,198,0.15);
+    cursor: pointer;
+    transition: all 0.15s;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.8);
+    position: relative;
+}
+.win-btn::before {
+    content: '';
     position: absolute;
-    bottom: 40px;
+    top: 1px; left: 2px; right: 2px;
+    height: 45%;
+    background: linear-gradient(to bottom, rgba(255,255,255,0.7), transparent);
+    border-radius: 3px 3px 50% 50%;
+    pointer-events: none;
+}
+.win-btn:hover {
+    background: linear-gradient(to bottom, #ffffff 0%, #e0effc 45%, #d0e5f5 50%, #eaf4fc 100%);
+}
+.win-btn:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 1px rgba(0,0,0,0.15), inset 0 2px 4px rgba(12,113,198,0.2);
+}
+.win-btn.active {
+    background: linear-gradient(to bottom, #a4c8ea 0%, #8ab8e0 45%, #78a8d4 50%, #98c2e6 100%);
+    color: #fff;
+    text-shadow: 0 1px 1px rgba(0,0,0,0.3);
+    border-color: #4a7fb4;
+}
+
+.mode-switcher {
+    position: fixed;
+    bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
-    padding: 15px 40px;
+    display: flex;
+    gap: 6px;
+    z-index: 1000;
+    padding: 6px;
+    border-radius: 6px;
+    background: rgba(180, 210, 235, 0.5);
+    backdrop-filter: blur(6px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.6);
+}
+
+.pop-all-btn {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 10px 28px;
+    font-size: 17px;
+    z-index: 1000;
+    display: none;
+}
+.pop-all-btn:hover { transform: translateX(-50%) translateY(-2px); }
+.pop-all-btn:active { transform: translateX(-50%) translateY(0); }
+
+/* ============================================
+   СЧЁТЧИКИ (показываются только в своей игре)
+   ============================================ */
+.score-counter {
+    position: fixed;
+    top: 30px; left: 30px;
+    padding: 10px 22px;
+    font-size: 18px;
+    color: #1a3a5c;
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid #6a9fd4;
+    border-radius: 4px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.9);
+    z-index: 1000;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.8);
+    font-family: 'HomeVideo', sans-serif;
+    display: none;
+}
+.bubbles-score,
+.windows-score { display: none; }
+
+/* Счётчик пузырей — только в игре «Пузыри» */
+#bubblesGame.active ~ .bubbles-score,
+body:has(#bubblesGame.active) .bubbles-score {
+    display: block;
+}
+
+/* Счётчик окон — только в игре «Окна» */
+#windowsGame.active ~ .windows-score,
+body:has(#windowsGame.active) .windows-score {
+    display: block;
+}
+
+/* Кнопка «Лопнуть все» — только в игре «Пузыри» */
+body:has(#bubblesGame.active) .pop-all-btn {
+    display: block;
+}
+
+/* ============================================
+   ОКНА WINDOWS 7
+   ============================================ */
+.win7-window {
+    position: absolute;
+    min-width: 260px;
+    max-width: 360px;
+    background: linear-gradient(to bottom, #f0f6fb 0%, #e2edf6 100%);
+    border: 1px solid #6a9fd4;
+    border-radius: 6px 6px 0 0;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.8) inset;
+    z-index: 100;
+    user-select: none;
+    animation: windowAppear 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    font-family: 'HomeVideo', sans-serif;
+}
+@keyframes windowAppear {
+    from { transform: scale(0.6) translateY(20px); opacity: 0; }
+    to   { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.win7-window.closing {
+    animation: windowClose 0.6s ease-in forwards;
+    pointer-events: none;
+}
+@keyframes windowClose {
+    0%   { transform: scale(1) rotate(0deg); opacity: 1; }
+    40%  { transform: scale(1.05) rotate(-2deg); opacity: 1; }
+    100% { transform: scale(0.3) rotate(8deg); opacity: 0; }
+}
+
+.win7-titlebar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 32px;
+    padding: 0 6px 0 12px;
+    background: linear-gradient(to bottom, #c9e2f7 0%, #a4c8ea 45%, #8ab8e0 50%, #a8cdec 100%);
+    border-bottom: 1px solid #5a8fc9;
+    cursor: grab;
+    border-radius: 5px 5px 0 0;
+    position: relative;
+}
+.win7-titlebar::before {
+    content: '';
+    position: absolute;
+    top: 1px; left: 3px; right: 3px;
+    height: 40%;
+    background: linear-gradient(to bottom, rgba(255,255,255,0.6), transparent);
+    border-radius: 4px 4px 50% 50%;
+    pointer-events: none;
+}
+.win7-titlebar:active { cursor: grabbing; }
+
+.win7-title {
+    font-size: 16px;
+    color: #1a3a5c;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.8);
+    z-index: 1;
+    letter-spacing: 0.5px;
+}
+
+.win7-close {
+    width: 28px;
+    height: 22px;
+    border: 1px solid #b54040;
+    border-radius: 4px;
+    background: linear-gradient(to bottom, #f0a0a0 0%, #e07070 45%, #c94242 50%, #e05050 100%);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-shadow: 0 1px 1px rgba(0,0,0,0.4);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.5);
+    transition: all 0.15s;
+    z-index: 2;
+    font-family: 'HomeVideo', sans-serif;
+}
+.win7-close:hover { background: linear-gradient(to bottom, #ffb0b0, #e04a4a); }
+.win7-close:active { transform: scale(0.9); }
+
+.win7-body {
+    padding: 22px 20px 16px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    background: linear-gradient(to bottom, #f7fbff 0%, #eaf2fa 100%);
+    border-left: 1px solid #b8d4ec;
+    border-right: 1px solid #b8d4ec;
+}
+
+.win7-icon {
+    font-size: 36px;
+    line-height: 1;
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,0.15));
+}
+
+.win7-message {
+    font-size: 16px;
+    color: #1a3a5c;
+    line-height: 1.4;
+    flex: 1;
+    padding-top: 6px;
+    letter-spacing: 0.3px;
+}
+
+.win7-cat-image {
+    display: block;
+    max-width: 100%;
+    width: 220px;
+    height: auto;
+    margin: 8px auto 0;
+    border-radius: 4px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.win7-body.with-cat {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 14px 16px 10px;
+}
+.win7-body.with-cat .win7-message {
+    text-align: center;
+    padding: 0;
+    margin-bottom: 6px;
+}
+.win7-body.with-cat .win7-icon { display: none; }
+
+.win7-buttons {
+    padding: 6px 20px 16px;
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    background: linear-gradient(to bottom, #eaf2fa 0%, #dce9f5 100%);
+    border: 1px solid #b8d4ec;
+    border-top: none;
+    border-radius: 0 0 6px 6px;
+}
+
+.win7-ok {
+    min-width: 80px;
+    padding: 6px 18px;
+    font-size: 16px;
+    font-family: 'HomeVideo', sans-serif;
+    color: #1a3a5c;
+    background: linear-gradient(to bottom, #f5faff 0%, #dceaf6 45%, #c8ddec 50%, #e6f2fb 100%);
+    border: 1px solid #6a9fd4;
+    border-radius: 4px;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.9);
+    transition: all 0.15s;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.8);
+    letter-spacing: 0.5px;
+}
+.win7-ok:hover { background: linear-gradient(to bottom, #ffffff, #e0effc); }
+.win7-ok:active { transform: scale(0.97); box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); }
+
+/* ============================================
+   ПАСХАЛКА: ВЕСЁЛЫЙ BSOD
+   ============================================ */
+.funny-bsod {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: #0000aa;
+    color: #ffffff;
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Lucida Console', 'HomeVideo', monospace;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.4s ease, visibility 0.4s ease;
+    pointer-events: none;
+}
+.funny-bsod.active {
+    opacity: 1;
+    visibility: visible;
+}
+.funny-bsod-content {
+    max-width: 700px;
+    padding: 40px;
+    text-align: left;
+}
+.funny-bsod-smiley {
+    font-size: 84px;
+    margin-bottom: 30px;
+    font-family: 'HomeVideo', sans-serif;
+}
+.funny-bsod-text {
+    font-size: 20px;
+    line-height: 1.6;
+    margin-bottom: 30px;
+}
+.funny-bsod-hint {
+    font-size: 16px;
+    opacity: 0.7;
+    font-style: italic;
+}
+
+/* ============================================
+   ИГРА 3: БРАУЗЕР
+   ============================================ */
+.browser-container {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: #d4e6f5;
+    display: flex;
+    flex-direction: column;
+}
+
+.browser-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: linear-gradient(to bottom, #e8f2fb 0%, #c9dff0 50%, #b4d3ea 100%);
+    border-bottom: 1px solid #7aa5cc;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
+    flex-shrink: 0;
+    z-index: 10;
+}
+
+.browser-nav-buttons { display: flex; gap: 3px; }
+
+.browser-nav-btn {
+    width: 30px;
+    height: 30px;
+    border: 1px solid #6a9fd4;
+    border-radius: 4px;
+    background: linear-gradient(to bottom, #f5faff 0%, #dceaf6 50%, #c8ddec 100%);
+    color: #1a3a5c;
+    font-size: 14px;
+    font-family: 'HomeVideo', sans-serif;
+    cursor: pointer;
+    transition: all 0.15s;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 1px 2px rgba(0,0,0,0.1);
+}
+.browser-nav-btn:hover { background: linear-gradient(to bottom, #ffffff 0%, #e6f2fb 50%, #d4e6f5 100%); }
+.browser-nav-btn:active { transform: translateY(1px); box-shadow: inset 0 2px 4px rgba(12,113,198,0.2); }
+
+.browser-address {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 30px;
+    padding: 0 12px;
+    background: #fff;
+    border: 1px solid #6a9fd4;
+    border-radius: 4px;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+    font-size: 14px;
+    color: #1a3a5c;
+}
+.browser-address-lock { color: #5a8fc9; font-size: 12px; }
+
+.browser-counter {
+    padding: 6px 14px;
+    background: linear-gradient(to bottom, #fff8e0 0%, #ffe9a8 100%);
+    border: 1px solid #c9a94a;
+    border-radius: 4px;
+    font-family: 'HomeVideo', sans-serif;
+    font-size: 14px;
+    color: #5c4410;
+    white-space: nowrap;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
+}
+
+.paint-tab-btn {
+    width: 34px; height: 30px;
+    border: 1px solid #6a9fd4;
+    border-radius: 4px;
+    background: linear-gradient(to bottom, #ffd8f0 0%, #f0a0d4 100%);
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.15s;
+    animation: paintTabPulse 1.5s infinite;
+}
+@keyframes paintTabPulse {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.1); }
+}
+.paint-tab-btn:hover { transform: scale(1.15); }
+
+.browser-page {
+    position: relative;
+    flex: 1;
+    overflow: hidden;
+    background: #fff;
+}
+
+/* MEME-кнопки */
+.meme-btn {
+    position: absolute;
+    width: 90px;
+    height: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    font-family: 'Impact', 'HomeVideo', sans-serif;
+    font-size: 22px;
+    letter-spacing: 1px;
+    color: #fff;
+    background: #e74c3c;
+    border: 3px solid #000;
+    border-radius: 6px;
+    cursor: pointer;
+    box-shadow: 4px 4px 0 #000;
+    text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
+    transition: transform 0.15s;
+    user-select: none;
+    z-index: 5;
+    overflow: hidden;
+    animation: memeShine 2s ease-in-out infinite;
+}
+.meme-btn::after {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.5) 50%, transparent 70%);
+    transform: translateX(-100%) rotate(45deg);
+    animation: shineMove 2s ease-in-out infinite;
+    pointer-events: none;
+}
+@keyframes shineMove {
+    0%   { transform: translateX(-100%) rotate(45deg); }
+    50%  { transform: translateX(100%) rotate(45deg); }
+    100% { transform: translateX(-100%) rotate(45deg); }
+}
+@keyframes memeShine {
+    0%, 100% { filter: brightness(1); }
+    50%      { filter: brightness(1.15); }
+}
+.meme-btn:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 #000; }
+.meme-btn:active { transform: scale(0.9); }
+
+.meme-btn.expiring { animation: memeFadeOut 0.5s ease-out forwards; pointer-events: none; }
+@keyframes memeFadeOut {
+    0%   { transform: scale(1); opacity: 1; }
+    100% { transform: scale(0.5); opacity: 0; }
+}
+.meme-btn.clicked { animation: memeClick 0.4s ease-out forwards; pointer-events: none; }
+@keyframes memeClick {
+    0%   { transform: scale(1); opacity: 1; }
+    50%  { transform: scale(1.3) rotate(5deg); opacity: 0.8; }
+    100% { transform: scale(0) rotate(15deg); opacity: 0; }
+}
+
+/* Мемы с котами */
+.cat-meme {
+    position: absolute;
+    padding: 0;
+    background: #fff;
+    border: 3px solid #000;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: transform 0.15s, opacity 0.5s;
+    z-index: 5;
+    max-width: 220px;
+    max-height: 220px;
+    overflow: hidden;
+    box-shadow: 4px 4px 0 #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.cat-meme img {
+    display: block;
+    max-width: 220px;
+    max-height: 220px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+}
+.cat-meme:hover { transform: scale(1.05) rotate(-1deg); }
+.cat-meme:active { transform: scale(0.9); }
+.cat-meme.expiring { animation: memeFadeOut 0.5s ease-out forwards; pointer-events: none; }
+.cat-meme.clicked { animation: memeClick 0.4s ease-out forwards; pointer-events: none; }
+
+/* Реклама */
+.ad-banner {
+    position: absolute;
+    padding: 12px 20px;
+    background: linear-gradient(45deg, #ff00ff, #00ffff, #ffff00, #ff00ff);
+    background-size: 300% 300%;
+    animation: adGlow 2s linear infinite;
+    border: 3px dashed #000;
+    border-radius: 6px;
+    font-family: 'Impact', sans-serif;
+    font-size: 18px;
+    color: #fff;
+    text-shadow: 2px 2px 0 #000;
+    cursor: pointer;
+    z-index: 5;
+    box-shadow: 0 0 15px rgba(255,0,255,0.6);
+    user-select: none;
+}
+@keyframes adGlow {
+    0%   { background-position: 0% 0%; }
+    100% { background-position: 300% 0%; }
+}
+.ad-banner .ad-close {
+    position: absolute;
+    top: -14px; right: -14px;
+    width: 32px; height: 32px;
+    background: #ff0000;
+    color: #fff;
+    border: 3px solid #fff;
+    border-radius: 50%;
     font-size: 18px;
     font-weight: bold;
-    color: #0c71c6;
-    background: linear-gradient(to bottom, #ffffff 0%, #d4f0ff 50%, #74e4ff 100%);
-    border: 2px solid #ffffff;
-    border-radius: 50px;
-    box-shadow: 
-        0 8px 15px rgba(0, 0, 0, 0.2),
-        inset 0 -4px 8px rgba(12, 113, 198, 0.3),
-        inset 0 4px 8px rgba(255, 255, 255, 0.9);
     cursor: pointer;
-    transition: all 0.2s ease;
-    z-index: 10;
-    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 8px rgba(0,0,0,0.6);
+    font-family: 'HomeVideo', sans-serif;
+    line-height: 1;
+    padding: 0;
 }
+.ad-banner .ad-close:hover { background: #cc0000; transform: scale(1.15); }
+.ad-banner.clicked { animation: memeClick 0.4s ease-out forwards; pointer-events: none; }
 
-.aero-button:hover {
-    transform: translateX(-50%) scale(1.05);
-}
-
-.aero-button:active {
-    transform: translateX(-50%) scale(0.95);
-}
-
-/* --- СЧЁТЧИК --- */
-.score-counter {
+/* Вирусная кнопка */
+.virus-btn {
     position: absolute;
-    top: 30px;
-    left: 30px;
-    padding: 10px 25px;
-    font-size: 20px;
+    padding: 14px 22px;
+    background: linear-gradient(to bottom, #ffcc00 0%, #ff6600 100%);
+    border: 3px solid #000;
+    border-radius: 8px;
+    font-family: 'Impact', sans-serif;
+    font-size: 16px;
+    color: #000;
+    text-align: center;
+    cursor: pointer;
+    z-index: 5;
+    box-shadow: 0 0 20px rgba(255,102,0,0.7);
+    animation: virusPulse 1s infinite;
+    user-select: none;
+}
+.virus-btn small {
+    display: block;
+    font-size: 11px;
+    margin-top: 4px;
+    color: #333;
+}
+@keyframes virusPulse {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.05); }
+}
+.virus-btn:hover { transform: scale(1.1); }
+
+/* Синий экран (вирус) */
+.bsod-screen {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: #0000aa;
+    color: #fff;
+    font-family: 'Lucida Console', monospace;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+.bsod-screen.active { display: flex; }
+.bsod-content {
+    text-align: left;
+    max-width: 700px;
+    padding: 40px;
+    font-size: 18px;
+    line-height: 1.6;
+}
+.bsod-smiley {
+    font-size: 72px;
+    margin-bottom: 20px;
+    font-family: 'HomeVideo', sans-serif;
+}
+.bsod-title {
+    font-size: 24px;
+    margin-bottom: 20px;
+    font-family: 'HomeVideo', sans-serif;
+}
+.bsod-text { font-size: 18px; margin-bottom: 30px; }
+.bsod-progress {
+    width: 100%;
+    height: 20px;
+    background: #000055;
+    border: 2px solid #fff;
+    margin-top: 20px;
+}
+.bsod-progress-bar {
+    height: 100%;
+    background: #fff;
+    width: 0%;
+    transition: width 2.5s linear;
+}
+
+/* PAINT */
+.paint-modal {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 5000;
+}
+.paint-modal.active { display: flex; }
+.paint-window {
+    background: #e8f2fb;
+    border: 2px solid #5a8fc9;
+    border-radius: 6px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    overflow: hidden;
+    max-width: 95vw;
+    max-height: 95vh;
+}
+.paint-titlebar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 32px;
+    padding: 0 8px 0 12px;
+    background: linear-gradient(to bottom, #c9e2f7 0%, #a4c8ea 50%, #8ab8e0 100%);
+    border-bottom: 1px solid #5a8fc9;
+    font-family: 'HomeVideo', sans-serif;
+    color: #1a3a5c;
+    font-size: 14px;
+}
+.paint-close {
+    width: 26px; height: 22px;
+    border: 1px solid #b54040;
+    border-radius: 4px;
+    background: linear-gradient(to bottom, #f0a0a0, #c94242);
+    color: #fff;
     font-weight: bold;
-    color: #0c71c6;
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(10px);
-    border-radius: 30px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    font-family: 'HomeVideo', sans-serif;
+}
+.paint-close:hover { background: linear-gradient(to bottom, #ffb0b0, #e04a4a); }
+.paint-body {
+    display: flex;
+    gap: 10px;
+    padding: 12px;
+    background: #e8f2fb;
+}
+.paint-tools {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 70px;
+}
+.paint-colors {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+}
+.paint-color-btn {
+    width: 100%;
+    aspect-ratio: 1;
+    border: 2px solid #5a8fc9;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+.paint-color-btn:hover { transform: scale(1.15); }
+.paint-color-btn.active {
+    border-color: #ff0000;
+    box-shadow: 0 0 0 2px #ff0000;
+}
+.paint-sizes {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+}
+.paint-size-btn {
+    width: 20px; height: 20px;
+    border: 1px solid #5a8fc9;
+    border-radius: 50%;
+    background: #fff;
+    color: #1a3a5c;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+}
+.paint-size-btn.active {
+    background: #5a8fc9;
+    color: #fff;
+}
+.paint-clear-btn {
+    padding: 6px 8px;
+    font-family: 'HomeVideo', sans-serif;
+    font-size: 12px;
+    color: #1a3a5c;
+    background: linear-gradient(to bottom, #fff, #dceaf6);
+    border: 1px solid #6a9fd4;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.paint-clear-btn:hover { background: linear-gradient(to bottom, #fff, #e6f2fb); }
+
+/* Кнопка день/ночь — рядом с меню */
+.day-night-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.6);
+    background: linear-gradient(to bottom, #ffea80 0%, #ffb74d 100%);
+    color: #ffffff;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 
+        0 2px 6px rgba(0, 0, 0, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    transition: all 0.3s ease;
+    font-family: 'HomeVideo', sans-serif;
+    flex-shrink: 0;
+    padding: 0;
+}
+.day-night-btn:hover { transform: scale(1.1); }
+.day-night-btn:active { transform: scale(0.95); }
+
+body.night-mode .day-night-btn {
+    background: linear-gradient(to bottom, #4a5a7a 0%, #2a3a5a 100%);
+    border-color: rgba(180, 200, 255, 0.6);
+    color: #d0e8ff;
+    box-shadow: 
+        0 2px 6px rgba(0, 0, 0, 0.4),
+        0 0 20px rgba(120, 180, 255, 0.4),
+        inset 0 1px 0 rgba(200, 220, 255, 0.5);
+}
+
+/* Мобильная версия */
+@media (max-width: 768px) {
+    .day-night-btn {
+        width: 34px;
+        height: 34px;
+        font-size: 15px;
+    }
+}
+
+/* ============================================
+   НОЧНОЙ РЕЖИМ — ОБЩИЕ
+   ============================================ */
+body.night-mode {
+    background: #0a0a1a;
+}
+
+/* Тёмные кнопки меню */
+body.night-mode .win-btn {
+    background: linear-gradient(to bottom, #2a3a5a 0%, #1a2a4a 45%, #0f1e3a 50%, #1e2e4e 100%);
+    border-color: #4a6a9a;
+    color: #d0e8ff;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
+    box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(150, 200, 255, 0.3),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+}
+body.night-mode .win-btn::before {
+    background: linear-gradient(to bottom, rgba(180, 220, 255, 0.3), transparent);
+}
+body.night-mode .win-btn:hover {
+    background: linear-gradient(to bottom, #3a4a6a 0%, #2a3a5a 45%, #1f2e4e 50%, #2e3e5e 100%);
+}
+body.night-mode .win-btn.active {
+    background: linear-gradient(to bottom, #5a7aaa 0%, #4a6a9a 45%, #3a5a8a 50%, #4a6a9a 100%);
+    color: #ffffff;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
+    border-color: #6a8aba;
+}
+
+/* Тёмная панель переключателя */
+body.night-mode .mode-switcher {
+    background: rgba(30, 50, 90, 0.6);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(150, 200, 255, 0.3);
+}
+
+/* Тёмные счётчики */
+body.night-mode .score-counter {
+    background: rgba(20, 40, 80, 0.85);
+    border-color: #4a6a9a;
+    color: #d0e8ff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(150, 200, 255, 0.3);
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
+}
+
+/* ============================================
+   НОЧНОЙ РЕЖИМ — ПУЗЫРИ
+   ============================================ */
+body.night-mode #bubblesGame::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: radial-gradient(ellipse at center,
+        transparent 30%,
+        rgba(5, 10, 30, 0.3) 70%,
+        rgba(5, 10, 30, 0.65) 100%
+    );
+    pointer-events: none;
+    z-index: 5;
+}
+
+/* ============================================
+   НОЧНОЙ РЕЖИМ — ОКНА (НЕБО, ХОЛМЫ, ЛУНА)
+   ============================================ */
+body.night-mode .xp-sky {
+    background: linear-gradient(to bottom,
+        #050515 0%,
+        #0a1020 15%,
+        #102040 35%,
+        #1a2a5a 55%,
+        #2a3a6a 75%,
+        #3a4a7a 90%,
+        #4a5a8a 100%
+    );
+}
+
+/* Звёзды через radial-gradient */
+body.night-mode .xp-sky::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-image:
+        radial-gradient(1px 1px at 10% 15%, #ffffff 0%, transparent 100%),
+        radial-gradient(1px 1px at 25% 8%, #ffffff 0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 40% 20%, #d0e8ff 0%, transparent 100%),
+        radial-gradient(1px 1px at 55% 12%, #ffffff 0%, transparent 100%),
+        radial-gradient(1px 1px at 70% 25%, #ffffff 0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 85% 18%, #d0e8ff 0%, transparent 100%),
+        radial-gradient(1px 1px at 15% 35%, #ffffff 0%, transparent 100%),
+        radial-gradient(1px 1px at 35% 42%, #ffffff 0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 60% 38%, #d0e8ff 0%, transparent 100%),
+        radial-gradient(1px 1px at 80% 45%, #ffffff 0%, transparent 100%),
+        radial-gradient(1px 1px at 5% 55%, #ffffff 0%, transparent 100%),
+        radial-gradient(1px 1px at 50% 60%, #ffffff 0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 75% 55%, #d0e8ff 0%, transparent 100%),
+        radial-gradient(1px 1px at 90% 70%, #ffffff 0%, transparent 100%),
+        radial-gradient(1px 1px at 20% 80%, #ffffff 0%, transparent 100%),
+        radial-gradient(1px 1px at 45% 75%, #d0e8ff 0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 65% 82%, #ffffff 0%, transparent 100%),
+        radial-gradient(1px 1px at 30% 90%, #ffffff 0%, transparent 100%),
+        radial-gradient(1px 1px at 85% 88%, #d0e8ff 0%, transparent 100%);
+    animation: starTwinkle 4s ease-in-out infinite alternate;
+    opacity: 0.9;
+}
+@keyframes starTwinkle {
+    0%   { opacity: 0.6; }
+    100% { opacity: 1; }
+}
+
+/* Тёмные облака */
+body.night-mode .xp-clouds,
+body.night-mode .xp-clouds-2 {
+    filter: brightness(0.4) hue-rotate(180deg) saturate(0.5);
+    opacity: 0.5;
+}
+
+/* Тёмные холмы */
+body.night-mode .xp-hill {
+    background: 
+        radial-gradient(ellipse 35% 45% at 22% 10%, rgba(80, 120, 80, 0.5) 0%, transparent 70%),
+        radial-gradient(ellipse 30% 38% at 45% 25%, rgba(60, 100, 60, 0.4) 0%, transparent 70%),
+        linear-gradient(to bottom,
+            #2a4a1a 0%,
+            #1f3a12 15%,
+            #152a0a 40%,
+            #0d1f06 70%,
+            #061205 100%
+        );
+    box-shadow: 
+        inset 0 70px 120px rgba(100, 150, 100, 0.15),
+        inset 0 -50px 120px rgba(0, 0, 0, 0.7);
+}
+body.night-mode .xp-hill-back {
+    background: linear-gradient(to bottom,
+        #1a3a10 0%,
+        #122a08 40%,
+        #0a1a05 70%,
+        #050a02 100%
+    );
+    box-shadow: 
+        inset 0 40px 70px rgba(60, 100, 60, 0.15),
+        inset 0 -30px 70px rgba(0, 0, 0, 0.7);
+}
+body.night-mode .xp-cloud-shadows {
+    background-image:
+        radial-gradient(ellipse 200px 45px at 15% 55%, rgba(0, 0, 0, 0.5) 0%, transparent 70%),
+        radial-gradient(ellipse 240px 55px at 40% 65%, rgba(0, 0, 0, 0.45) 0%, transparent 70%),
+        radial-gradient(ellipse 180px 40px at 65% 60%, rgba(0, 0, 0, 0.48) 0%, transparent 70%),
+        radial-gradient(ellipse 220px 50px at 85% 70%, rgba(0, 0, 0, 0.42) 0%, transparent 70%);
+}
+
+/* Скрываем солнце ночью */
+body.night-mode .xp-sun-core,
+body.night-mode .xp-sun-halo,
+body.night-mode .xp-sun-rainbow {
+    opacity: 0;
+    transition: opacity 0.8s ease;
+}
+
+
+/* ============================================
+   ЛУНА
+   ============================================ */
+.xp-moon {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 90px; height: 90px;
+    margin: -45px 0 0 -45px;
+    border-radius: 50%;
+    background: 
+        /* Кратеры */
+        radial-gradient(circle 12px at 35% 40%, rgba(140, 140, 150, 0.6) 0%, transparent 100%),
+        radial-gradient(circle 8px at 60% 55%, rgba(140, 140, 150, 0.5) 0%, transparent 100%),
+        radial-gradient(circle 6px at 45% 65%, rgba(140, 140, 150, 0.4) 0%, transparent 100%),
+        radial-gradient(circle 10px at 70% 35%, rgba(140, 140, 150, 0.5) 0%, transparent 100%),
+        radial-gradient(circle 5px at 25% 55%, rgba(140, 140, 150, 0.4) 0%, transparent 100%),
+        radial-gradient(circle 7px at 55% 25%, rgba(140, 140, 150, 0.45) 0%, transparent 100%),
+        /* Основной диск луны */
+        radial-gradient(circle at 40% 35%, #f0f0f5 0%, #d8d8e0 40%, #c0c0c8 70%, #a8a8b0 100%);
+    box-shadow: 
+        0 0 30px rgba(180, 220, 255, 0.6),
+        0 0 60px rgba(150, 200, 255, 0.4),
+        0 0 100px rgba(120, 180, 255, 0.25),
+        inset -8px -8px 20px rgba(80, 80, 100, 0.4);
+    opacity: 0;
+    transition: opacity 0.8s ease;
+    pointer-events: none;
     z-index: 10;
+}
+
+body.night-mode .xp-moon {
+    opacity: 1;
+    animation: moonGlow 4s ease-in-out infinite;
+}
+
+@keyframes moonGlow {
+    0%, 100% {
+        box-shadow: 
+            0 0 30px rgba(180, 220, 255, 0.6),
+            0 0 60px rgba(150, 200, 255, 0.4),
+            0 0 100px rgba(120, 180, 255, 0.25),
+            inset -8px -8px 20px rgba(80, 80, 100, 0.4);
+    }
+    50% {
+        box-shadow: 
+            0 0 40px rgba(180, 220, 255, 0.8),
+            0 0 80px rgba(150, 200, 255, 0.55),
+            0 0 130px rgba(120, 180, 255, 0.35),
+            inset -8px -8px 20px rgba(80, 80, 100, 0.4);
+    }
+}
+
+/* ============================================
+   НОЧНОЙ РЕЖИМ — БРАУЗЕР
+   ============================================ */
+body.night-mode .browser-container {
+    background: #1a2a45;
+}
+
+body.night-mode .browser-toolbar {
+    background: linear-gradient(to bottom, #2a3a5a 0%, #1f2e4a 50%, #152438 100%);
+    border-bottom-color: #3a4a6a;
+    box-shadow: inset 0 1px 0 rgba(150, 200, 255, 0.2);
+}
+
+body.night-mode .browser-nav-btn {
+    background: linear-gradient(to bottom, #3a4a6a 0%, #2a3a5a 50%, #1f2e4a 100%);
+    border-color: #4a6a9a;
+    color: #d0e8ff;
+    box-shadow: inset 0 1px 0 rgba(150, 200, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+body.night-mode .browser-nav-btn:hover {
+    background: linear-gradient(to bottom, #4a5a7a 0%, #3a4a6a 50%, #2a3a5a 100%);
+}
+
+body.night-mode .browser-address {
+    background: #0f1e35;
+    border-color: #3a4a6a;
+    color: #d0e8ff;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+body.night-mode .browser-address-lock { color: #6a8aba; }
+
+body.night-mode .browser-counter {
+    background: linear-gradient(to bottom, #3a4a2a 0%, #2a3a1a 100%);
+    border-color: #5a6a3a;
+    color: #e0f0c0;
+}
+
+body.night-mode .browser-page {
+    background: #0a1525;
+}
+
+/* MEME-кнопки — приглушённые */
+body.night-mode .meme-btn {
+    filter: brightness(0.7) saturate(0.8);
+}
+
+/* Реклама — приглушённая */
+body.night-mode .ad-banner {
+    filter: brightness(0.65) saturate(0.8);
+}
+
+/* PAINT — тёмная тема */
+body.night-mode .paint-window {
+    background: #1a2a45;
+    border-color: #3a4a6a;
+}
+body.night-mode .paint-titlebar {
+    background: linear-gradient(to bottom, #2a3a5a 0%, #1f2e4a 50%, #152438 100%);
+    border-bottom-color: #3a4a6a;
+    color: #d0e8ff;
+}
+body.night-mode .paint-body {
+    background: #1a2a45;
+}
+body.night-mode #paintCanvas {
+    background: #f0f0f0;   /* холст остаётся светлым, как в Paint */
+    border-color: #3a4a6a;
+}
+body.night-mode .paint-color-btn {
+    border-color: #4a6a9a;
+}
+body.night-mode .paint-size-btn {
+    background: #2a3a5a;
+    border-color: #4a6a9a;
+    color: #d0e8ff;
+}
+body.night-mode .paint-size-btn.active {
+    background: #5a7aaa;
+    color: #ffffff;
+}
+body.night-mode .paint-clear-btn {
+    background: linear-gradient(to bottom, #3a4a6a, #2a3a5a);
+    border-color: #4a6a9a;
+    color: #d0e8ff;
+}
+body.night-mode .paint-clear-btn:hover {
+    background: linear-gradient(to bottom, #4a5a7a, #3a4a6a);
+}
+
+/* Мобильный размер кнопки */
+@media (max-width: 768px) {
+    .day-night-btn {
+        width: 38px;
+        height: 38px;
+        font-size: 17px;
+        top: 12px;
+        right: 12px;
+    }
+}
+
+/* ============================================
+   МОБИЛЬНАЯ АДАПТАЦИЯ
+   ============================================ */
+@media (max-width: 768px) {
+    .mode-switcher { bottom: 10px; padding: 4px; }
+    .win-btn { padding: 7px 14px; font-size: 14px; }
+    .pop-all-btn { padding: 8px 20px; font-size: 15px; top: 10px; }
+    .score-counter { font-size: 15px; padding: 8px 16px; top: 10px; left: 10px; }
+    .win7-window { min-width: 200px; max-width: 260px; }
+    .win7-title { font-size: 14px; }
+    .win7-message { font-size: 14px; }
+    .win7-icon { font-size: 30px; width: 38px; height: 38px; }
+    .win7-ok { font-size: 14px; padding: 5px 14px; min-width: 60px; }
+    .win7-close { width: 24px; height: 20px; font-size: 12px; }
+    .win7-titlebar { height: 28px; }
+    .win7-body { padding: 16px 14px 12px; }
+    .win7-buttons { padding: 4px 14px 12px; }
+    .win7-cat-image { width: 160px; }
+    .browser-toolbar { padding: 6px 8px; gap: 6px; }
+    .browser-nav-btn { width: 26px; height: 26px; font-size: 12px; }
+    .browser-address { height: 26px; font-size: 12px; padding: 0 8px; }
+    .browser-counter { font-size: 12px; padding: 4px 8px; }
+    .meme-btn { width: 70px; height: 70px; font-size: 16px; }
+    .cat-meme { max-width: 140px; max-height: 140px; }
+    .cat-meme img { max-width: 140px; max-height: 140px; }
+    .ad-banner { font-size: 14px; padding: 8px 14px; }
+    .ad-banner .ad-close {
+        width: 28px; height: 28px; font-size: 16px;
+        top: -12px; right: -12px;
+    }
+    .virus-btn { font-size: 13px; padding: 10px 16px; }
+    .paint-body { flex-direction: column; align-items: center; }
+    .paint-tools { flex-direction: row; width: auto; }
+    .paint-colors { grid-template-columns: repeat(8, 1fr); }
+    #paintCanvas { width: 90vw; height: auto; }
+    .funny-bsod-smiley { font-size: 56px; }
+    .funny-bsod-text { font-size: 16px; }
+    .funny-bsod-content { padding: 20px; }
 }
