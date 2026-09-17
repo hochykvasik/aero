@@ -1,5 +1,5 @@
 // ============================================
-//  WEBGL-ВОДА — с яркими бликами и мягким курсором
+//  WEBGL-ВОДА + ЛЁД (объединённый шейдер)
 // ============================================
 
 (function() {
@@ -32,16 +32,19 @@
         uniform sampler2D u_tiles;
         uniform sampler2D u_normal1;
         uniform sampler2D u_normal2;
+        uniform sampler2D u_iceColor;
+        uniform sampler2D u_iceNormal;
         uniform float u_time;
         uniform vec2 u_mouse;
         uniform vec2 u_resolution;
+        uniform float u_iceIntensity;
         
         void main() {
             vec2 uv = v_uv;
             vec2 aspect = vec2(u_resolution.x / u_resolution.y, 1.0);
             vec2 tileUV = uv * aspect;
             
-            // ===== ПЛАВНОЕ КОЛЫХАНИЕ =====
+            // ===== ВОДА =====
             vec2 uv1 = tileUV * 1.2;
             uv1.x += u_time * 0.002;
             uv1.y += u_time * 0.0015;
@@ -52,16 +55,14 @@
             uv2.y += u_time * 0.0018;
             vec3 normal2 = (texture2D(u_normal2, uv2).rgb * 2.0 - 1.0) * 0.5;
             
-            // ===== ВОЛНА ОТ КУРСОРА =====
+            // Волна от курсора
             vec2 toMouse = uv - u_mouse;
             toMouse.x *= aspect.x;
             float distToMouse = length(toMouse);
-            
             float ring = sin(distToMouse * 20.0 - u_time * 2.5) * 0.5 + 0.5;
             float ringFalloff = smoothstep(0.35, 0.0, distToMouse);
             float mouseWave = ring * ringFalloff * 0.08;
             
-            // ===== ИСКАЖЕНИЕ ПЛИТКИ =====
             vec2 distortion = normal1.xy * 0.06 + normal2.xy * 0.04;
             vec2 mouseDir = normalize(toMouse + 0.001);
             distortion += mouseDir * mouseWave;
@@ -71,45 +72,62 @@
             
             vec3 tileColor = texture2D(u_tiles, distortedUV).rgb;
             
-            // ===== БАЗОВЫЙ ЦВЕТ ВОДЫ =====
             vec3 waterTint = vec3(0.2, 0.6, 0.85);
             vec3 tintedTiles = tileColor * waterTint;
             vec3 finalColor = tintedTiles * 0.85;
             
-            // ===== КАУСТИКА — УСИЛЕННАЯ =====
             float causticA = max(0.0, normal1.z) * max(0.0, normal1.x + normal1.y);
             float causticB = max(0.0, normal2.z) * max(0.0, normal2.x + normal2.y);
             float caustic = (causticA + causticB);
-            
-            // Усилили с 1.2 до 1.6 — блики ярче
-            caustic = pow(caustic, 0.7) * 1.6;
+            caustic = pow(caustic, 0.7) * 1.2;
             caustic = clamp(caustic, 0.0, 1.0);
             
-            // Светлые бирюзовые полосы
-            finalColor += vec3(caustic * 0.55, caustic * 0.75, caustic * 0.85);
+            finalColor += vec3(caustic * 0.5, caustic * 0.7, caustic * 0.8);
             
-            // ===== БЛИКИ (белые точки) — УСИЛЕННЫЕ =====
-            float sparkle1 = pow(max(0.0, normal1.z), 10.0);
-            float sparkle2 = pow(max(0.0, normal2.z), 10.0);
-            // Было 0.7, стало 1.0 — ярче
-            float sparkle = (sparkle1 + sparkle2) * 1.0;
-            
+            float sparkle1 = pow(max(0.0, normal1.z), 12.0);
+            float sparkle2 = pow(max(0.0, normal2.z), 12.0);
+            float sparkle = (sparkle1 + sparkle2) * 0.4;
             finalColor += vec3(sparkle, sparkle, sparkle);
             
-            // ===== КУРСОР-ФОНАРИК (МЯГКИЙ) =====
-            // Было 0.8, стало 0.4 — вдвое мягче
-            float mouseGlow = ringFalloff * 0.4;
-            finalColor += vec3(mouseGlow * 0.4, mouseGlow * 0.55, mouseGlow * 0.7);
+           // Фонарик курсора (и для воды, и для льда)
+float mouseGlow = ringFalloff * 0.41;
+float coreGlow = smoothstep(0.12, 0.0, distToMouse) * 0.25;
+finalColor += vec3(mouseGlow * 0.8, mouseGlow * 0.45, mouseGlow * 0.4);
+finalColor += vec3(coreGlow * 0.6, coreGlow * 0.8, coreGlow * 0.95);
             
-            // Ядро фонарика — было 0.6, стало 0.25
-            float coreGlow = smoothstep(0.12, 0.0, distToMouse) * 0.25;
-            finalColor += vec3(coreGlow * 0.6, coreGlow * 0.8, coreGlow * 1.0);
-            
-            // ===== ВИНЬЕТКА =====
+            // ===== ЛЁД (накладывается поверх воды) =====
+            if (u_iceIntensity > 0.01) {
+                vec2 iceUV = tileUV * 2.0;
+                iceUV.x += u_time * 0.005;
+                iceUV.y += u_time * 0.004;
+                vec3 iceNormal = texture2D(u_iceNormal, iceUV).rgb * 2.0 - 1.0;
+                
+                vec2 iceDistorted = tileUV + iceNormal.xy * 0.06;
+                iceDistorted *= 2.5;
+                vec3 iceColor = texture2D(u_iceColor, iceDistorted).rgb;
+                
+                // Лёд темнее и насыщеннее
+vec3 blueIce = iceColor * vec3(0.4, 0.6, 1.1);
+
+// Приглушаем яркость
+blueIce *= 0.61;
+
+float iceShine = pow(max(0.0, iceNormal.z), 6.0);
+blueIce += vec3(iceShine * 0.4, iceShine * 0.55, iceShine * 0.8);
+
+float iceCracks = length(iceNormal.xy);
+blueIce += vec3(iceCracks * 0.15, iceCracks * 0.25, iceCracks * 0.35);
+
+// Накладываем с правильным блендингом — multiply
+finalColor = mix(finalColor, finalColor * blueIce + blueIce * 0.35, u_iceIntensity);
+}
+
+            // Виньетка
             vec2 vignetteUV = uv * (1.0 - uv.yx);
-            float vignette = pow(vignetteUV.x * vignetteUV.y * 12.0, 0.35);
-            finalColor *= mix(0.35, 1.0, vignette);
+            float vignette = pow(vignetteUV.x * vignetteUV.y * 8.0, 0.3);
+            finalColor *= mix(0.5, 1.0, vignette);
             
+            // Вода ночью — синее
             finalColor = clamp(finalColor, 0.0, 1.0);
             
             gl_FragColor = vec4(finalColor, 1.0);
@@ -138,7 +156,6 @@
     
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
         console.error('Ошибка линковки:', gl.getProgramInfoLog(program));
-        document.querySelector('.pool-fallback').classList.add('active');
         return;
     }
     
@@ -164,6 +181,9 @@
         tiles: gl.getUniformLocation(program, 'u_tiles'),
         normal1: gl.getUniformLocation(program, 'u_normal1'),
         normal2: gl.getUniformLocation(program, 'u_normal2'),
+        iceColor: gl.getUniformLocation(program, 'u_iceColor'),
+        iceNormal: gl.getUniformLocation(program, 'u_iceNormal'),
+        iceIntensity: gl.getUniformLocation(program, 'u_iceIntensity'),
     };
     
     function loadTexture(url, unit, uniformLocation) {
@@ -176,6 +196,7 @@
                 new Uint8Array([128, 128, 128, 255]));
             
             const image = new Image();
+            image.crossOrigin = 'anonymous';
             image.onload = () => {
                 gl.bindTexture(gl.TEXTURE_2D, texture);
                 gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
@@ -229,10 +250,21 @@
         loadTexture('images/pool-tiles.png', 0, uniforms.tiles),
         loadTexture('images/water-normal1.jpg', 1, uniforms.normal1),
         loadTexture('images/water-normal2.jpg', 2, uniforms.normal2),
+        loadTexture('images/ice-color.jpg', 3, uniforms.iceColor),
+        loadTexture('images/ice-normal.jpg', 4, uniforms.iceNormal),
     ]).then(() => {
-        console.log('✅ WebGL-вода загружена');
+        console.log('✅ WebGL-вода + лёд готовы');
         animate();
     });
+    
+    // Публичный API
+    let iceIntensity = 0;
+    let targetIceIntensity = 0;
+    
+    window.iceEffect = {
+        activate: () => { targetIceIntensity = 1; },
+        deactivate: () => { targetIceIntensity = 0; }
+    };
     
     const startTime = Date.now();
     
@@ -242,8 +274,11 @@
         mouse.x += (mouse.targetX - mouse.x) * 0.05;
         mouse.y += (mouse.targetY - mouse.y) * 0.05;
         
+        iceIntensity += (targetIceIntensity - iceIntensity) * 0.05;
+        
         gl.uniform1f(uniforms.time, time);
         gl.uniform2f(uniforms.mouse, mouse.x, mouse.y);
+        gl.uniform1f(uniforms.iceIntensity, iceIntensity);
         
         gl.drawArrays(gl.TRIANGLES, 0, 6);
         

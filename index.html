@@ -5,18 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Frutiger Aero Relax</title>
     <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="stylesheet" href="style.css">
     <link rel="apple-touch-icon" href="favicon.png">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <!-- ИГРА 1: ПУЗЫРИ -->
-     <!-- Кнопка переключения день/ночь -->
-
     <div id="bubblesGame" class="game active">
         <div class="pool-background">
-            <!-- WebGL-слой воды -->
             <canvas id="waterCanvas"></canvas>
-            <!-- Fallback: если WebGL не поддерживается -->
+            <canvas id="iceCanvas"></canvas>
             <div class="pool-fallback">
                 <div class="pool-tiles">
                     <div class="tile-grid"></div>
@@ -40,16 +37,18 @@
     <div class="xp-hill"></div>
     <div class="xp-cloud-shadows"></div>
     <div class="xp-sun">
-    <div class="xp-sun-rainbow"></div>
-    <div class="xp-sun-rays xp-sun-rays-1"></div>
-    <div class="xp-sun-rays xp-sun-rays-2"></div>
-    <div class="xp-sun-rays xp-sun-rays-3"></div>
-    <div class="xp-sun-halo"></div>
-    <div class="xp-sun-core"></div>
-    <div class="xp-moon"></div>
-</div>
+        <div class="xp-sun-rainbow"></div>
+        <div class="xp-sun-rays xp-sun-rays-1"></div>
+        <div class="xp-sun-rays xp-sun-rays-2"></div>
+        <div class="xp-sun-rays xp-sun-rays-3"></div>
+        <div class="xp-sun-halo"></div>
+        <div class="xp-sun-core"></div>
+        <div class="xp-moon"></div>
+    </div>
     <div class="xp-clouds"></div>
-</div>
+    <div class="xp-clouds-rain"></div>   <!-- НОВЫЙ СЛОЙ ДЛЯ ДОЖДЯ -->
+    <canvas id="windowsBubblesCanvas" class="windows-bubbles"></canvas>
+    <div class="xp-rain"></div>
 </div>
         <div class="score-counter windows-score">Закрыто: <span id="scoreWindows">0</span></div>
     </div>
@@ -78,7 +77,7 @@
     <div id="paintModal" class="paint-modal">
         <div class="paint-window">
             <div class="paint-titlebar">
-                <span class="paint-title">Paint — Секретная вкладка</span>
+                <span class="paint-title">Paint - Секретная вкладка</span>
                 <button class="paint-close" id="paintClose">✕</button>
             </div>
             <div class="paint-body">
@@ -108,16 +107,17 @@
 
     <!-- УВЕДОМЛЕНИЕ О PAINT -->
     <div id="paintNotification" class="paint-notification">
-        🎨 Открыта секретная вкладка - Paint!
+        🎨 Открыта секретная вкладка — Paint!
     </div>
 
-    <!-- ПЕРЕКЛЮЧАТЕЛЬ ИГР -->
+    <!-- ПЕРЕКЛЮЧАТЕЛЬ ИГР + ДЕНЬ/НОЧЬ -->
     <div class="mode-switcher">
-        <button id="dayNightToggle" class="day-night-btn" title="Переключить день/ночь">☀</button>
-        <button id="modeBubbles" class="win-btn active">🫧 Пузыри</button>
-        <button id="modeWindows" class="win-btn">⚠️ Окна</button>
-        <button id="modeBrowser" class="win-btn">🖥️ Браузер</button>
-    </div>
+    <button id="dayNightToggle" class="day-night-btn" title="Переключить день/ночь">☀</button>
+    <button id="settingsToggle" class="day-night-btn" title="Настройки">⛭</button>
+    <button id="modeBubbles" class="win-btn active">🫧 Пузыри</button>
+    <button id="modeWindows" class="win-btn">⚠️ Окна</button>
+    <button id="modeBrowser" class="win-btn">🖥️ Браузер</button>
+</div>
 
     <!-- ЗВУКИ -->
     <audio id="popSoundSmall" src="sounds/pop-small.mp3" preload="auto"></audio>
@@ -129,6 +129,7 @@
     <audio id="menuSound" src="sounds/menusound.mp3" preload="auto"></audio>
     <audio id="menuFallback" src="sounds/pop.mp3" preload="auto"></audio>
     <audio id="catSound" src="sounds/miau-kotika.mp3" preload="auto"></audio>
+    <audio id="catSound2" src="sounds/meow2.mp3" preload="auto"></audio>
     <audio id="memeSound1" src="sounds/meme1.mp3" preload="auto"></audio>
     <audio id="memeSound2" src="sounds/meme2.mp3" preload="auto"></audio>
     <audio id="memeSound3" src="sounds/meme3.mp3" preload="auto"></audio>
@@ -138,10 +139,46 @@
     <audio id="adCloseSound" src="sounds/ad-close.mp3" preload="auto"></audio>
     <audio id="virusWinSound" src="sounds/virus-win.mp3" preload="auto"></audio>
     <audio id="virusLoseSound" src="sounds/virus-lose.mp3" preload="auto"></audio>
+    <audio id="icebreak1" src="sounds/icebreak1.mp3" preload="auto"></audio>
+    <audio id="icebreak2" src="sounds/icebreak2.mp3" preload="auto"></audio>
+    <audio id="freezeSound" src="sounds/freeze.mp3" preload="auto"></audio>
     <audio id="ambientMusic" src="sounds/Yume_2kki_OST_-_Lotus_Waters_76578992.mp3" loop preload="auto"></audio>
-<audio id="catSound2" src="sounds/meow2.mp3" preload="auto"></audio>
 
-    <!-- WebGL-вода -->
+<!-- МОДАЛЬНОЕ ОКНО НАСТРОЕК -->
+<div id="settingsModal" class="settings-modal">
+    <div class="settings-window">
+        <div class="settings-titlebar">
+            <span class="settings-title">⛭ Настройки</span>
+            <button class="settings-close" id="settingsClose">✕</button>
+        </div>
+        <div class="settings-body">
+            <!-- Громкость музыки -->
+            <div class="settings-group">
+                <label class="settings-label">♫ Громкость музыки</label>
+                <div class="settings-slider-row">
+                    <input type="range" id="musicVolume" class="settings-slider" min="0" max="100" value="15">
+                    <span class="settings-value" id="musicVolumeValue">15%</span>
+                </div>
+            </div>
+            
+            <!-- Выбор курсора -->
+            <div class="settings-group">
+                <label class="settings-label">☛ Курсор</label>
+                <div class="settings-options">
+                    <button class="settings-option active" data-cursor="waves">
+                        <span class="settings-option-icon">≈</span>
+                        <span>Волны</span>
+                    </button>
+                    <button class="settings-option" data-cursor="bubbles">
+                        <span class="settings-option-icon">🫧</span>
+                        <span>Волны + пузырьки</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
     <script src="webgl-water.js"></script>
     <script src="script.js"></script>
 </body>

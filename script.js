@@ -46,7 +46,6 @@ function playMenuSound() {
     clone.play().catch(() => {});
 }
 
-// Два звука мяу — тише
 const catSound = document.getElementById('catSound');
 const catSound2 = document.getElementById('catSound2');
 if (catSound) catSound.volume = 0.25;
@@ -90,6 +89,33 @@ function playSimpleSound(sound) {
     if (!sound || !sound.src) return;
     const clone = sound.cloneNode();
     clone.volume = sound.volume;
+    clone.play().catch(() => {});
+}
+
+const icebreak1 = document.getElementById('icebreak1');
+const icebreak2 = document.getElementById('icebreak2');
+const freezeSound = document.getElementById('freezeSound');
+if (icebreak1) icebreak1.volume = 0.5;
+if (icebreak2) icebreak2.volume = 0.5;
+if (freezeSound) freezeSound.volume = 0.4;
+
+function playIceBreakSound() {
+    const sounds = [icebreak1, icebreak2].filter(s => s && s.src);
+    if (sounds.length === 0) {
+        playPopSound(20, 0.3);
+        return;
+    }
+    const source = sounds[Math.floor(Math.random() * sounds.length)];
+    const clone = source.cloneNode();
+    clone.volume = source.volume;
+    clone.playbackRate = 0.95 + Math.random() * 0.15;
+    clone.play().catch(() => {});
+}
+
+function playFreezeSound() {
+    if (!freezeSound || !freezeSound.src) return;
+    const clone = freezeSound.cloneNode();
+    clone.volume = freezeSound.volume;
     clone.play().catch(() => {});
 }
 
@@ -147,9 +173,11 @@ function switchMode(mode) {
         clearAllWindows();
         setTimeout(spawnWindows, 300);
         startXpBackgroundMotion();
+        initBgBubbles();
     } else {
         clearAllWindows();
         stopXpBackgroundMotion();
+        if (isRaining) stopRain();
     }
     
     if (mode === 'browser') {
@@ -198,6 +226,14 @@ const popParticles = [];
 const trailBubbles = [];
 const waterWaves = [];
 
+let isFrozen = false;
+let frozenTimer = null;
+let popAllClicks = [];
+let frozenBreakCount = 0;
+let FREEZE_BREAK_NEEDED = 20 + Math.floor(Math.random() * 11);
+let freezeTargetClicks = 5 + Math.floor(Math.random() * 6);
+let iceVisualIntensity = 0;
+
 const pointer = {
     x: -1000, y: -1000,
     prevX: -1000, prevY: -1000,
@@ -236,6 +272,7 @@ class Bubble {
         this.color = BUBBLE_COLORS[Math.floor(Math.random() * BUBBLE_COLORS.length)];
         this.highlightColor = HIGHLIGHT_COLORS[Math.floor(Math.random() * HIGHLIGHT_COLORS.length)];
         this.isPopping = false;
+        this.isIce = false;
         this.wobble = Math.random() * Math.PI * 2;
         this.iridescentAngle = Math.random() * Math.PI * 2;
         this.iridescentSpeed = (Math.random() - 0.5) * 0.01;
@@ -245,6 +282,7 @@ class Bubble {
         this.stuckTo = null;
         this.stuckOffsetX = 0;
         this.stuckOffsetY = 0;
+        this.crackSeed = Math.random() * 1000;
     }
     
     update() {
@@ -291,7 +329,6 @@ class Bubble {
     }
     
     draw() {
-        // Тень на дне
         const shadowOffsetX = 30 + this.vx * 8;
         const shadowOffsetY = 45 + this.vy * 8;
         
@@ -308,7 +345,6 @@ class Bubble {
         ctx.ellipse(this.x + shadowOffsetX, this.y + shadowOffsetY, this.radius * 1.4, this.radius * 1.0, 0, 0, Math.PI * 2);
         ctx.fill();
         
-        // Прозрачная внутренность
         const innerGradient = ctx.createRadialGradient(
             this.x, this.y, this.radius * 0.2,
             this.x, this.y, this.radius * 0.95
@@ -322,7 +358,6 @@ class Bubble {
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.fill();
         
-        // Радужный фильтр
         const rainbowGradient = ctx.createConicGradient(this.iridescentAngle, this.x, this.y);
         rainbowGradient.addColorStop(0.0, 'rgba(255, 100, 150, 0.10)');
         rainbowGradient.addColorStop(0.15, 'rgba(255, 200, 100, 0.10)');
@@ -338,7 +373,6 @@ class Bubble {
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.fill();
         
-        // Радужные кольца
         const hue1 = (this.iridescentAngle * 180 / Math.PI) % 360;
         const hue2 = (hue1 + 120) % 360;
         const hue3 = (hue1 + 240) % 360;
@@ -361,51 +395,155 @@ class Bubble {
         ctx.lineWidth = Math.max(1, this.radius * 0.025);
         ctx.stroke();
         
+        // Лёд — плавно через iceVisualIntensity
+        if (iceVisualIntensity > 0.01) {
+            const iceGradient = ctx.createRadialGradient(
+                this.x - this.radius * 0.3, this.y - this.radius * 0.3, 0,
+                this.x, this.y, this.radius
+            );
+            iceGradient.addColorStop(0, `rgba(220, 240, 255, ${0.85 * iceVisualIntensity})`);
+            iceGradient.addColorStop(0.5, `rgba(160, 210, 240, ${0.85 * iceVisualIntensity})`);
+            iceGradient.addColorStop(1, `rgba(100, 160, 210, ${0.9 * iceVisualIntensity})`);
+            
+            ctx.beginPath();
+            ctx.fillStyle = iceGradient;
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Трещины
+            ctx.save();
+            ctx.globalAlpha = 0.7 * iceVisualIntensity;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.lineWidth = 1.3;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            
+            function rand(s) {
+                const x = Math.sin(s * 12.9898) * 43758.5453;
+                return x - Math.floor(x);
+            }
+            
+            const seed = this.crackSeed;
+            const cracksCount = 6 + Math.floor(rand(seed) * 4);
+            
+            for (let c = 0; c < cracksCount; c++) {
+                const startAngle = rand(seed + c * 13) * Math.PI * 2;
+                const startR = this.radius * (0.1 + rand(seed + c * 7) * 0.3);
+                const endR = this.radius * (0.75 + rand(seed + c * 47) * 0.22);
+                const segments = 3 + Math.floor(rand(seed + c * 31) * 3);
+                
+                ctx.beginPath();
+                let prevX = this.x + Math.cos(startAngle) * startR;
+                let prevY = this.y + Math.sin(startAngle) * startR;
+                ctx.moveTo(prevX, prevY);
+                
+                for (let s = 1; s <= segments; s++) {
+                    const t = s / segments;
+                    const angle = startAngle + (rand(seed + c * 11 + s) - 0.5) * 1.2;
+                    const r = startR + (endR - startR) * t;
+                    const jitter = (rand(seed + c * 100 + s * 7) - 0.5) * this.radius * 0.18;
+                    const x = this.x + Math.cos(angle) * r + jitter;
+                    const y = this.y + Math.sin(angle) * r + jitter;
+                    ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+                
+                if (rand(seed + c * 53) > 0.4) {
+                    const branchAngle = startAngle + (rand(seed + c * 71) - 0.5) * 1.5;
+                    const branchR = startR + (endR - startR) * (0.4 + rand(seed + c * 83) * 0.3);
+                    const bx = this.x + Math.cos(branchAngle) * branchR;
+                    const by = this.y + Math.sin(branchAngle) * branchR;
+                    const branchEnd = branchAngle + (rand(seed + c * 89) - 0.5) * 1.8;
+                    const branchLen = this.radius * (0.15 + rand(seed + c * 97) * 0.2);
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(bx, by);
+                    ctx.lineTo(bx + Math.cos(branchEnd) * branchLen, by + Math.sin(branchEnd) * branchLen);
+                    ctx.stroke();
+                }
+            }
+            ctx.restore();
+            
+            // Блики льда
+            const bigIceHx = this.x - this.radius * 0.35;
+            const bigIceHy = this.y - this.radius * 0.4;
+            const bigIceGrad = ctx.createRadialGradient(bigIceHx, bigIceHy, 0, bigIceHx, bigIceHy, this.radius * 0.4);
+            bigIceGrad.addColorStop(0, `rgba(255, 255, 255, ${iceVisualIntensity})`);
+            bigIceGrad.addColorStop(0.5, `rgba(255, 255, 255, ${0.4 * iceVisualIntensity})`);
+            bigIceGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            ctx.beginPath();
+            ctx.fillStyle = bigIceGrad;
+            ctx.arc(bigIceHx, bigIceHy, this.radius * 0.4, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.save();
+            ctx.globalAlpha = 0.95 * iceVisualIntensity;
+            for (let i = 0; i < 5; i++) {
+                const sx = this.x + (rand(seed + i * 77) - 0.5) * this.radius * 1.6;
+                const sy = this.y + (rand(seed + i * 99) - 0.5) * this.radius * 1.6;
+                const distSq = (sx - this.x) ** 2 + (sy - this.y) ** 2;
+                if (distSq < this.radius * this.radius * 0.8) {
+                    ctx.fillStyle = `rgba(255, 255, 255, ${iceVisualIntensity})`;
+                    ctx.beginPath();
+                    ctx.arc(sx, sy, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            ctx.restore();
+            
+            ctx.beginPath();
+            ctx.strokeStyle = `rgba(220, 240, 255, ${iceVisualIntensity})`;
+            ctx.lineWidth = 3;
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.strokeStyle = `rgba(180, 220, 255, ${0.6 * iceVisualIntensity})`;
+            ctx.lineWidth = 6;
+            ctx.arc(this.x, this.y, this.radius + 2, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+        
+        // Тонкий контур
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.55)';
         ctx.lineWidth = 1;
         ctx.stroke();
         
-        // Большой мягкий блик (движется)
+        // Блики
         const bigSoftHx = this.x + Math.cos(this.highlightAngle * 0.6) * this.radius * 0.3;
         const bigSoftHy = this.y + Math.sin(this.highlightAngle * 0.6) * this.radius * 0.3;
-        const bigSoftGradient = ctx.createRadialGradient(
-            bigSoftHx, bigSoftHy, 0,
-            bigSoftHx, bigSoftHy, this.radius * 0.55
-        );
-        bigSoftGradient.addColorStop(0, 'rgba(255, 255, 255, 0.35)');
-        bigSoftGradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.15)');
+        const bigSoftGradient = ctx.createRadialGradient(bigSoftHx, bigSoftHy, 0, bigSoftHx, bigSoftHy, this.radius * 0.55);
+        bigSoftGradient.addColorStop(0, 'rgba(255, 255, 255, 0.5)');
+        bigSoftGradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.2)');
         bigSoftGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
         ctx.beginPath();
         ctx.fillStyle = bigSoftGradient;
         ctx.arc(bigSoftHx, bigSoftHy, this.radius * 0.55, 0, Math.PI * 2);
         ctx.fill();
         
-        // Статичный блик сверху слева
         const bigHx = this.x - this.radius * 0.35;
         const bigHy = this.y - this.radius * 0.4;
         const bigGradient = ctx.createRadialGradient(bigHx, bigHy, 0, bigHx, bigHy, this.radius * 0.3);
-        bigGradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
-        bigGradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.3)');
+        bigGradient.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+        bigGradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.4)');
         bigGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
         ctx.beginPath();
         ctx.fillStyle = bigGradient;
         ctx.arc(bigHx, bigHy, this.radius * 0.3, 0, Math.PI * 2);
         ctx.fill();
         
-        // Маленький яркий блик
         const smallHx = this.x + Math.cos(this.highlightAngle) * this.radius * this.highlightRadius;
         const smallHy = this.y + Math.sin(this.highlightAngle) * this.radius * this.highlightRadius;
         ctx.beginPath();
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-        ctx.arc(smallHx, smallHy, Math.max(1.5, this.radius * 0.08), 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 1)';
+        ctx.arc(smallHx, smallHy, Math.max(2, this.radius * 0.09), 0, Math.PI * 2);
         ctx.fill();
         
-        // Совсем маленький блик снизу
         ctx.beginPath();
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-        ctx.arc(this.x + this.radius * 0.25, this.y + this.radius * 0.35, Math.max(1, this.radius * 0.04), 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.arc(this.x + this.radius * 0.25, this.y + this.radius * 0.35, Math.max(1, this.radius * 0.05), 0, Math.PI * 2);
         ctx.fill();
     }
 }
@@ -453,28 +591,59 @@ class TrailBubble {
 }
 
 class PopParticle {
-    constructor(x, y, color) {
+    constructor(x, y, color, isIce = false) {
         this.x = x; this.y = y;
-        this.vx = (Math.random() - 0.5) * 6;
-        this.vy = (Math.random() - 0.5) * 6;
-        this.size = Math.random() * 3 + 1;
+        this.vx = (Math.random() - 0.5) * 8;
+        this.vy = (Math.random() - 0.5) * 8;
+        this.size = isIce ? Math.random() * 8 + 8 : Math.random() * 3 + 1;
         this.color = color;
         this.life = 1.0;
-        this.decay = Math.random() * 0.03 + 0.02;
+        this.decay = Math.random() * 0.02 + 0.015;
+        this.rotation = Math.random() * Math.PI * 2;
+        this.rotationSpeed = (Math.random() - 0.5) * 0.3;
+        this.isIce = isIce;
     }
     update() {
-        this.x += this.vx; this.y += this.vy;
-        this.vx *= 0.95; this.vy *= 0.95;
+        this.x += this.vx;
+        this.y += this.vy;
+        this.vy += 0.15;
+        this.vx *= 0.97;
+        this.vy *= 0.97;
+        this.rotation += this.rotationSpeed;
         this.life -= this.decay;
+        if (this.isIce) this.size *= 0.995;
     }
     draw() {
         if (this.life <= 0) return;
-        ctx.beginPath();
-        ctx.fillStyle = this.color;
+        ctx.save();
         ctx.globalAlpha = this.life;
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.globalAlpha = 1.0;
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.rotation);
+        
+        if (this.isIce) {
+            ctx.beginPath();
+            ctx.moveTo(0, -this.size);
+            ctx.lineTo(this.size * 0.7, 0);
+            ctx.lineTo(0, this.size);
+            ctx.lineTo(-this.size * 0.7, 0);
+            ctx.closePath();
+            const grad = ctx.createLinearGradient(-this.size, -this.size, this.size, this.size);
+            grad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+            grad.addColorStop(0.5, this.color);
+            grad.addColorStop(1, 'rgba(150, 200, 240, 0.7)');
+            ctx.fillStyle = grad;
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+        } else {
+            ctx.beginPath();
+            ctx.fillStyle = this.color;
+            ctx.arc(0, 0, this.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        ctx.restore();
     }
 }
 
@@ -524,10 +693,25 @@ function updateScoreBubbles(n) {
 function popBubble(b) {
     if (b.isPopping) return;
     b.isPopping = true;
-    if (!b.tiny) playPopSound(b.radius);
-    for (let i = 0; i < 15; i++) popParticles.push(new PopParticle(b.x, b.y, b.highlightColor));
-    updateScoreBubbles(1);
-    waterWaves.push(new WaterWave(b.x, b.y, b.tiny));
+    
+    if (b.isIce || isFrozen) {
+        playIceBreakSound();
+        for (let i = 0; i < 16; i++) {
+            const p = new PopParticle(b.x, b.y, 'rgba(200, 240, 255, 0.95)', true);
+            popParticles.push(p);
+        }
+        frozenBreakCount++;
+        
+        if (frozenBreakCount >= FREEZE_BREAK_NEEDED) {
+            setTimeout(unfreezeWater, 500);
+        }
+    } else {
+        if (!b.tiny) playPopSound(b.radius);
+        for (let i = 0; i < 15; i++) popParticles.push(new PopParticle(b.x, b.y, b.highlightColor));
+        updateScoreBubbles(1);
+        waterWaves.push(new WaterWave(b.x, b.y, b.tiny));
+    }
+    
     particles.forEach(other => {
         if (other.stuckTo === b) other.stuckTo = null;
     });
@@ -542,10 +726,44 @@ function handleBubbleClick(x, y) {
     });
 }
 
+function triggerFreeze() {
+    if (isFrozen) return;
+    isFrozen = true;
+    frozenBreakCount = 0;
+    FREEZE_BREAK_NEEDED = 20 + Math.floor(Math.random() * 11);
+    freezeTargetClicks = 5 + Math.floor(Math.random() * 6);
+    playFreezeSound();
+    
+    particles.forEach(b => {
+        if (!b.isPopping) b.isIce = true;
+    });
+    
+    document.body.classList.add('frozen');
+    if (window.iceEffect) window.iceEffect.activate();
+    
+    frozenTimer = setTimeout(() => {
+        unfreezeWater();
+    }, 30000);
+}
+
+function unfreezeWater() {
+    if (!isFrozen) return;
+    isFrozen = false;
+    clearTimeout(frozenTimer);
+    freezeTargetClicks = 5 + Math.floor(Math.random() * 6);
+    
+    document.body.classList.remove('frozen');
+    if (window.iceEffect) window.iceEffect.deactivate();
+    
+    particles.forEach(b => {
+        if (b.isIce && !b.isPopping) b.isIce = false;
+    });
+}
+
 window.addEventListener('mousedown', e => {
     pointer.x = e.clientX; pointer.y = e.clientY;
     pointer.isDown = true;
-    if (currentMode === 'bubbles') {
+    if (currentMode === 'bubbles' && !isFrozen) {
         waterWaves.push(new WaterWave(e.clientX, e.clientY, true));
     }
     handleBubbleClick(e.clientX, e.clientY);
@@ -566,7 +784,7 @@ canvas.addEventListener('touchstart', e => {
     pointer.prevX = t.clientX;
     pointer.prevY = t.clientY;
     pointer.isDown = true;
-    if (currentMode === 'bubbles') {
+    if (currentMode === 'bubbles' && !isFrozen) {
         waterWaves.push(new WaterWave(t.clientX, t.clientY, true));
     }
     handleBubbleClick(t.clientX, t.clientY);
@@ -589,6 +807,27 @@ let popAllInProgress = false;
 
 popAllBtn.addEventListener('click', () => {
     if (popAllInProgress) return;
+    
+    const now = Date.now();
+    popAllClicks.push(now);
+    if (popAllClicks.length > 20) popAllClicks.shift();
+    
+    if (!isFrozen && popAllClicks.length >= freezeTargetClicks) {
+        triggerFreeze();
+        popAllClicks = [];
+        return;
+    }
+    
+    if (isFrozen) {
+        popAllInProgress = true;
+        playMenuSound();
+        particles.forEach(b => {
+            if (!b.isPopping) popBubble(b);
+        });
+        setTimeout(() => { popAllInProgress = false; }, 1000);
+        return;
+    }
+    
     popAllInProgress = true;
     playMenuSound();
     const alive = particles.filter(b => !b.isPopping);
@@ -623,11 +862,12 @@ function checkBubbleCollisions() {
             if (a.isPopping || b.isPopping) continue;
             if (a.stuckTo || b.stuckTo) continue;
             if (a.tiny !== b.tiny) continue;
+            if (a.isIce || b.isIce) continue;
             const dx = b.x - a.x;
             const dy = b.y - a.y;
             const dist = Math.sqrt(dx*dx + dy*dy);
             const minDist = a.radius + b.radius;
-            if (dist < minDist && dist > 0 && Math.random() < 0.15) {
+            if (dist < minDist && dist > 0 && Math.random() < 0.05) {
                 b.stuckTo = a;
                 b.stuckOffsetX = b.x - a.x;
                 b.stuckOffsetY = b.y - a.y;
@@ -645,6 +885,7 @@ function checkBubbleCollisions() {
 // ============================================
 let xpMotionActive = false;
 let xpMotionHandler = null;
+let xpOrientationHandler = null;
 
 function startXpBackgroundMotion() {
     if (xpMotionActive) return;
@@ -660,12 +901,7 @@ function startXpBackgroundMotion() {
     
     if (!clouds || !hill || !sky) return;
     
-    let targetX = 0;
-    let targetY = 0;
-    let currentX = 0;
-    let currentY = 0;
-    let currentX2 = 0;
-    let currentY2 = 0;
+    let targetX = 0, targetY = 0, currentX = 0, currentY = 0, currentX2 = 0, currentY2 = 0;
     
     xpMotionHandler = (e) => {
         let clientX, clientY;
@@ -680,10 +916,19 @@ function startXpBackgroundMotion() {
         const ny = Math.max(-0.8, Math.min(0.8, (clientY / window.innerHeight - 0.5) * 2));
         targetX = nx;
         targetY = ny;
+         // След курсора
+    spawnCursorTrail(clientX, clientY);
     };
     
     window.addEventListener('mousemove', xpMotionHandler);
     window.addEventListener('touchmove', xpMotionHandler, { passive: true });
+    
+    xpOrientationHandler = (e) => {
+        if (e.gamma === null || e.beta === null) return;
+        targetX = Math.max(-0.8, Math.min(0.8, e.gamma / 45));
+        targetY = Math.max(-0.8, Math.min(0.8, (e.beta - 45) / 45));
+    };
+    window.addEventListener('deviceorientation', xpOrientationHandler);
     
     function animateXp() {
         if (!xpMotionActive) return;
@@ -694,7 +939,6 @@ function startXpBackgroundMotion() {
         currentY2 += (targetY - currentY2) * 0.015;
         
         sky.style.transform = `translate(${-currentX * 8}px, ${-currentY * 4}px)`;
-        
         clouds.style.marginLeft = `${-currentX * 35}px`;
         clouds.style.marginTop = `${-currentY * 15}px`;
         clouds2.style.marginLeft = `${-currentX2 * 20}px`;
@@ -722,6 +966,10 @@ function stopXpBackgroundMotion() {
         window.removeEventListener('mousemove', xpMotionHandler);
         window.removeEventListener('touchmove', xpMotionHandler);
         xpMotionHandler = null;
+    }
+    if (xpOrientationHandler) {
+        window.removeEventListener('deviceorientation', xpOrientationHandler);
+        xpOrientationHandler = null;
     }
     
     const clouds = document.querySelector('.xp-clouds');
@@ -782,6 +1030,175 @@ const openWindows = [];
 const MAX_WINDOWS = isMobile ? 8 : 14;
 let scoreWindows = 0;
 let windowSpawnTimer = null;
+
+const bubblesCanvas = document.getElementById('windowsBubblesCanvas');
+const bubblesCtx = bubblesCanvas ? bubblesCanvas.getContext('2d') : null;
+const backgroundBubbles = [];
+const MAX_BG_BUBBLES = isMobile ? 10 : 20;
+let bgBubbleCount = 0;
+let rainTriggerTarget = 40 + Math.floor(Math.random() * 11);
+let isRaining = false;
+let windowsClosedDuringRain = 0;
+let rainEndTarget = 20 + Math.floor(Math.random() * 11);
+
+function resizeBubblesCanvas() {
+    if (!bubblesCanvas) return;
+    bubblesCanvas.width = window.innerWidth;
+    bubblesCanvas.height = window.innerHeight;
+}
+
+class BgBubble {
+    constructor() {
+        this.x = Math.random() * window.innerWidth;
+        this.y = Math.random() * window.innerHeight;
+        // Было: radius * 8 + 5 (5-13px). Стало: 12-28px — крупнее в 2 раза
+        this.radius = Math.random() * 16 + 12;
+        this.vx = (Math.random() - 0.5) * 0.5;
+        this.vy = (Math.random() - 0.5) * 0.5;
+        this.wobble = Math.random() * Math.PI * 2;
+        // Более прозрачные цвета (альфа 0.25-0.4)
+        this.hue = 180 + Math.random() * 40;
+        this.color = `hsla(${this.hue}, 80%, 75%, 0.3)`;
+        this.highlightColor = `hsla(${this.hue}, 90%, 90%, 0.7)`;
+    }
+    update() {
+        this.wobble += 0.02;
+        this.x += this.vx + Math.sin(this.wobble) * 0.2;
+        this.y += this.vy + Math.cos(this.wobble * 0.8) * 0.2;
+        if (this.x - this.radius < 0) { this.x = this.radius; this.vx = Math.abs(this.vx); }
+        if (this.x + this.radius > window.innerWidth) { this.x = window.innerWidth - this.radius; this.vx = -Math.abs(this.vx); }
+        if (this.y - this.radius < 0) { this.y = this.radius; this.vy = Math.abs(this.vy); }
+        if (this.y + this.radius > window.innerHeight) { this.y = window.innerHeight - this.radius; this.vy = -Math.abs(this.vy); }
+    }
+    draw() {
+        if (!bubblesCtx) return;
+        
+        // 1. Внутреннее заполнение — почти прозрачное
+        const innerGradient = bubblesCtx.createRadialGradient(
+            this.x, this.y, this.radius * 0.2,
+            this.x, this.y, this.radius
+        );
+        innerGradient.addColorStop(0, `hsla(${this.hue}, 80%, 95%, 0.15)`);
+        innerGradient.addColorStop(0.6, `hsla(${this.hue}, 70%, 85%, 0.1)`);
+        innerGradient.addColorStop(1, `hsla(${this.hue}, 70%, 75%, 0.25)`);
+        
+        bubblesCtx.beginPath();
+        bubblesCtx.fillStyle = innerGradient;
+        bubblesCtx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        bubblesCtx.fill();
+        
+        // 2. Тонкая светлая обводка
+        bubblesCtx.beginPath();
+        bubblesCtx.strokeStyle = `hsla(${this.hue}, 90%, 90%, 0.6)`;
+        bubblesCtx.lineWidth = 1.5;
+        bubblesCtx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        bubblesCtx.stroke();
+        
+        // 3. Радужный оттенок по краю
+        bubblesCtx.beginPath();
+        bubblesCtx.strokeStyle = `hsla(${this.hue + 40}, 80%, 80%, 0.3)`;
+        bubblesCtx.lineWidth = 1;
+        bubblesCtx.arc(this.x, this.y, this.radius * 0.95, 0, Math.PI * 2);
+        bubblesCtx.stroke();
+        
+        // 4. Большой мягкий блик сверху слева
+        const hlX = this.x - this.radius * 0.35;
+        const hlY = this.y - this.radius * 0.4;
+        const hlGrad = bubblesCtx.createRadialGradient(
+            hlX, hlY, 0,
+            hlX, hlY, this.radius * 0.4
+        );
+        hlGrad.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+        hlGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.4)');
+        hlGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        bubblesCtx.beginPath();
+        bubblesCtx.fillStyle = hlGrad;
+        bubblesCtx.arc(hlX, hlY, this.radius * 0.4, 0, Math.PI * 2);
+        bubblesCtx.fill();
+        
+        // 5. Маленький яркий блик
+        bubblesCtx.beginPath();
+        bubblesCtx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        bubblesCtx.arc(
+            this.x + this.radius * 0.25,
+            this.y + this.radius * 0.3,
+            Math.max(2, this.radius * 0.08),
+            0, Math.PI * 2
+        );
+        bubblesCtx.fill();
+    }
+}
+
+function spawnBgBubble() {
+    if (backgroundBubbles.length >= MAX_BG_BUBBLES) return;
+    backgroundBubbles.push(new BgBubble());
+}
+
+function initBgBubbles() {
+    backgroundBubbles.length = 0;
+    resizeBubblesCanvas();
+    for (let i = 0; i < MAX_BG_BUBBLES; i++) spawnBgBubble();
+}
+
+function handleBgBubbleClick(x, y) {
+    if (currentMode !== 'windows') return;
+    for (let i = backgroundBubbles.length - 1; i >= 0; i--) {
+        const b = backgroundBubbles[i];
+        const dx = x - b.x;
+        const dy = y - b.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < b.radius + 8) {
+            backgroundBubbles.splice(i, 1);
+            bgBubbleCount++;
+            playPopSound(b.radius);
+            setTimeout(spawnBgBubble, 1500);
+            
+            if (!isRaining && bgBubbleCount >= rainTriggerTarget) {
+                console.log('🌧️ Триггер дождя: лопнуто', bgBubbleCount, 'пузырей');
+                startRain();
+            }
+            return;
+        }
+    }
+}
+
+function startRain() {
+    if (isRaining) return;
+    isRaining = true;
+    windowsClosedDuringRain = 0;
+    rainEndTarget = 20 + Math.floor(Math.random() * 11);
+    document.body.classList.add('rain-active');
+    console.log('🌧️ Дождь начался. Окон до конца:', rainEndTarget);
+}
+
+function stopRain() {
+    if (!isRaining) return;
+    isRaining = false;
+    document.body.classList.remove('rain-active');
+    bgBubbleCount = 0;
+    rainTriggerTarget = 40 + Math.floor(Math.random() * 11);
+    console.log('☀️ Дождь закончился');
+}
+
+function updateBgBubbles() {
+    if (currentMode !== 'windows') return;
+    if (!bubblesCtx) return;
+    bubblesCtx.clearRect(0, 0, bubblesCanvas.width, bubblesCanvas.height);
+    backgroundBubbles.forEach(b => {
+        b.update();
+        b.draw();
+    });
+}
+
+windowsGame.addEventListener('click', (e) => {
+    if (currentMode !== 'windows') return;
+    handleBgBubbleClick(e.clientX, e.clientY);
+});
+windowsGame.addEventListener('touchstart', (e) => {
+    if (currentMode !== 'windows') return;
+    const t = e.touches[0];
+    handleBgBubbleClick(t.clientX, t.clientY);
+}, { passive: true });
 
 function updateScoreWindows(n) {
     scoreWindows += n;
@@ -917,7 +1334,11 @@ function closeWindow(win) {
         if (idx !== -1) openWindows.splice(idx, 1);
     }, 600);
     
-    // Пасхалка BSOD: после 50 окон, шанс 0.4%
+    if (isRaining) {
+        windowsClosedDuringRain++;
+        if (windowsClosedDuringRain >= rainEndTarget) stopRain();
+    }
+    
     if (scoreWindows >= 50 && Math.random() < 0.004) {
         setTimeout(showFunnyBSOD, 400);
     }
@@ -988,16 +1409,11 @@ function getMemeSpawnInterval() {
     return 1800;
 }
 
-// Кнопки навигации — звук клика
 document.getElementById('btnBack').addEventListener('click', playClickSound);
 document.getElementById('btnForward').addEventListener('click', playClickSound);
-
-// Кнопка обновления — очищает экран браузера
 document.getElementById('btnRefresh').addEventListener('click', () => {
     playClickSound();
-    if (browserPage) {
-        browserPage.innerHTML = '';
-    }
+    if (browserPage) browserPage.innerHTML = '';
 });
 
 const MEME_COLORS = [
@@ -1133,7 +1549,7 @@ function createAd() {
         }
     });
     
-     const w = isMobile ? 200 : 240;
+    const w = isMobile ? 200 : 240;
     const h = isMobile ? 55 : 60;
     const maxX = browserPage.clientWidth - w - 20;
     const maxY = browserPage.clientHeight - h - 20;
@@ -1143,7 +1559,6 @@ function createAd() {
     browserPage.appendChild(ad);
 }
 
-// 5 вариантов вирусов
 const VIRUS_VARIANTS = [
     {
         text: '⚠️ СКАЧАТЬ ВИРУСЫ<br>ОНЛАЙН БЕЗ MINECRAFT',
@@ -1188,7 +1603,7 @@ function createVirusButton() {
     btn.style.boxShadow = `0 0 20px ${variant.shadow}`;
     btn.innerHTML = `${variant.text}<small>${variant.sub}</small>`;
     
-      const w = isMobile ? 200 : 240;
+    const w = isMobile ? 200 : 240;
     const h = isMobile ? 95 : 110;
     const maxX = browserPage.clientWidth - w - 20;
     const maxY = browserPage.clientHeight - h - 20;
@@ -1220,9 +1635,7 @@ function showPaintNotification() {
     const notif = document.getElementById('paintNotification');
     if (!notif) return;
     notif.classList.add('show');
-    setTimeout(() => {
-        notif.classList.remove('show');
-    }, 3000);
+    setTimeout(() => notif.classList.remove('show'), 3000);
 }
 
 let secretUnlocked = false;
@@ -1246,11 +1659,8 @@ function startBrowserGame() {
     function scheduleMemeSpawn() {
         if (!browserRunning) return;
         if (!browserPaused) {
-            if (Math.random() < 0.25) {
-                createCatMeme();
-            } else {
-                createMemeButton();
-            }
+            if (Math.random() < 0.25) createCatMeme();
+            else createMemeButton();
         }
         setTimeout(scheduleMemeSpawn, getMemeSpawnInterval());
     }
@@ -1301,14 +1711,19 @@ function showBSOD() {
     bsod.classList.add('active');
     progress.style.width = '0%';
     
-    setTimeout(() => {
-        progress.style.width = '100%';
-    }, 100);
+    setTimeout(() => { progress.style.width = '100%'; }, 100);
     
     setTimeout(() => {
         bsod.classList.remove('active');
         browserPaused = false;
         stopBrowserGame(true);
+        
+        memeScore = 0;
+        memeScoreEl.textContent = '0';
+        secretUnlocked = false;
+        paintTabBtn.style.display = 'none';
+        memeCatchTimestamps.length = 0;
+        
         if (currentMode === 'browser') {
             startBrowserGame();
         }
@@ -1469,6 +1884,12 @@ if (dayNightBtn) {
 let time = 0;
 
 function animate() {
+    const targetIce = isFrozen ? 1 : 0;
+    iceVisualIntensity += (targetIce - iceVisualIntensity) * 0.05;
+    if (Math.abs(iceVisualIntensity - targetIce) < 0.01) {
+        iceVisualIntensity = targetIce;
+    }
+    
     if (currentMode === 'bubbles') {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         time += 1;
@@ -1490,7 +1911,7 @@ function animate() {
             }
             const waveChance = isMobile ? 0.3 : 0.15;
             const waveThreshold = isMobile ? 1 : 5;
-            if (Math.random() < waveChance && speed > waveThreshold) {
+            if (Math.random() < waveChance && speed > waveThreshold && !isFrozen) {
                 waterWaves.push(new WaterWave(pointer.x, pointer.y, true));
             }
         }
@@ -1498,7 +1919,7 @@ function animate() {
         pointer.prevX = pointer.x;
         pointer.prevY = pointer.y;
 
-        checkBubbleCollisions();
+        if (!isFrozen) checkBubbleCollisions();
 
         for (let i = waterWaves.length - 1; i >= 0; i--) {
             const w = waterWaves[i];
@@ -1539,6 +1960,11 @@ function animate() {
             if (p.life <= 0) popParticles.splice(i, 1);
         }
     }
+    
+    if (currentMode === 'windows') {
+        updateBgBubbles();
+    }
+    
     requestAnimationFrame(animate);
 }
 
@@ -1550,8 +1976,191 @@ animate();
 
 window.addEventListener('resize', () => {
     resizeCanvas();
+    resizeBubblesCanvas();
     initBubbles();
 });
 
 popAllBtn.style.display = 'block';
 bubblesScore.style.display = 'block';
+
+
+// ============================================
+//  НАСТРОЙКИ — МОДАЛЬНОЕ ОКНО
+// ============================================
+const settingsModal = document.getElementById('settingsModal');
+const settingsToggle = document.getElementById('settingsToggle');
+const settingsClose = document.getElementById('settingsClose');
+const musicVolumeSlider = document.getElementById('musicVolume');
+const musicVolumeValue = document.getElementById('musicVolumeValue');
+const cursorOptions = document.querySelectorAll('.settings-option');
+
+// Открытие/закрытие
+if (settingsToggle && settingsModal) {
+    settingsToggle.addEventListener('click', () => {
+        playClickSound();
+        settingsModal.classList.add('active');
+        // Загружаем сохранённые настройки
+        loadSettings();
+    });
+}
+if (settingsClose && settingsModal) {
+    settingsClose.addEventListener('click', () => {
+        playClickSound();
+        settingsModal.classList.remove('active');
+    });
+}
+if (settingsModal) {
+    settingsModal.addEventListener('click', (e) => {
+        if (e.target === settingsModal) {
+            settingsModal.classList.remove('active');
+        }
+    });
+}
+
+// ===== ГРОМКОСТЬ МУЗЫКИ =====
+function updateMusicVolume(value) {
+    const vol = value / 100;
+    ambientMusic.volume = vol;
+    if (musicVolumeValue) musicVolumeValue.textContent = value + '%';
+    localStorage.setItem('musicVolume', value);
+}
+
+if (musicVolumeSlider) {
+    musicVolumeSlider.addEventListener('input', (e) => {
+        updateMusicVolume(parseInt(e.target.value));
+    });
+}
+
+// ===== ВЫБОР КУРСОРА =====
+let cursorMode = 'waves'; // 'waves' или 'bubbles'
+
+function setCursorMode(mode) {
+    cursorMode = mode;
+    cursorOptions.forEach(opt => {
+        opt.classList.toggle('active', opt.dataset.cursor === mode);
+    });
+    localStorage.setItem('cursorMode', mode);
+}
+
+cursorOptions.forEach(opt => {
+    opt.addEventListener('click', () => {
+        playClickSound();
+        setCursorMode(opt.dataset.cursor);
+    });
+});
+
+// ===== ЗАГРУЗКА СОХРАНЁННЫХ НАСТРОЕК =====
+function loadSettings() {
+    // Громкость
+    const savedVolume = localStorage.getItem('musicVolume');
+    if (savedVolume !== null) {
+        const vol = parseInt(savedVolume);
+        if (musicVolumeSlider) musicVolumeSlider.value = vol;
+        updateMusicVolume(vol);
+    } else {
+        updateMusicVolume(15); // дефолт — тихо
+    }
+    
+    // Курсор
+    const savedCursor = localStorage.getItem('cursorMode');
+    if (savedCursor) {
+        setCursorMode(savedCursor);
+    } else {
+        setCursorMode('waves'); // дефолт — только волны
+    }
+}
+
+// Загружаем при старте
+loadSettings();
+
+// ============================================
+//  СЛЕД КУРСОРА (для «Окон» и «Браузера»)
+// ============================================
+const cursorTrailContainer = document.createElement('div');
+cursorTrailContainer.id = 'cursorTrail';
+cursorTrailContainer.style.cssText = `
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 9998;
+    overflow: hidden;
+`;
+document.body.appendChild(cursorTrailContainer);
+
+let lastTrailTime = 0;
+
+function spawnCursorTrail(x, y) {
+    if (currentMode === 'bubbles') return; // в пузырях свой след
+    const now = Date.now();
+    if (now - lastTrailTime < 30) return; // ограничение частоты
+    lastTrailTime = now;
+    
+    // Волны — всегда
+    const wave = document.createElement('div');
+    wave.style.cssText = `
+        position: absolute;
+        left: ${x}px;
+        top: ${y}px;
+        width: 20px;
+        height: 20px;
+        border: 2px solid rgba(200, 240, 255, 0.7);
+        border-radius: 50%;
+        transform: translate(-50%, -50%) scale(0.3);
+        animation: cursorWaveExpand 0.9s ease-out forwards;
+        pointer-events: none;
+    `;
+    cursorTrailContainer.appendChild(wave);
+    setTimeout(() => wave.remove(), 900);
+    
+    // Пузырьки — только если выбрано
+    if (cursorMode === 'bubbles') {
+        for (let i = 0; i < 2; i++) {
+            const bubble = document.createElement('div');
+            const size = 4 + Math.random() * 6;
+            const offsetX = (Math.random() - 0.5) * 20;
+            const offsetY = (Math.random() - 0.5) * 20;
+            bubble.style.cssText = `
+                position: absolute;
+                left: ${x + offsetX}px;
+                top: ${y + offsetY}px;
+                width: ${size}px;
+                height: ${size}px;
+                border-radius: 50%;
+                background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9), rgba(200, 240, 255, 0.5), transparent);
+                border: 1px solid rgba(255, 255, 255, 0.7);
+                transform: translate(-50%, -50%);
+                animation: cursorBubbleFloat 1s ease-out forwards;
+                pointer-events: none;
+            `;
+            cursorTrailContainer.appendChild(bubble);
+            setTimeout(() => bubble.remove(), 1000);
+        }
+    }
+}
+
+// CSS для анимаций — добавим через JS, чтобы не править style.css
+const cursorStyle = document.createElement('style');
+cursorStyle.textContent = `
+    @keyframes cursorWaveExpand {
+        0% { transform: translate(-50%, -50%) scale(0.3); opacity: 1; }
+        100% { transform: translate(-50%, -50%) scale(3); opacity: 0; }
+    }
+    @keyframes cursorBubbleFloat {
+        0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        100% { transform: translate(-50%, -80%) scale(0.3); opacity: 0; }
+    }
+`;
+document.head.appendChild(cursorStyle);
+
+
+// След курсора в браузере
+document.getElementById('browserGame').addEventListener('mousemove', (e) => {
+    if (currentMode !== 'browser') return;
+    spawnCursorTrail(e.clientX, e.clientY);
+});
+document.getElementById('browserGame').addEventListener('touchmove', (e) => {
+    if (currentMode !== 'browser') return;
+    const t = e.touches[0];
+    spawnCursorTrail(t.clientX, t.clientY);
+}, { passive: true });

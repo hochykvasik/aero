@@ -57,10 +57,8 @@ body { position: relative; }
 
 #waterCanvas {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
     display: block;
     z-index: 1;
     pointer-events: none;
@@ -156,23 +154,22 @@ body { position: relative; }
     top: -10%; left: -10%;
     width: 120%; height: 120%;
     background: linear-gradient(to bottom,
-        #083e9b 0%,
-        #0950bb 15%,
+        #0d3a8a 0%,
+        #1a55b0 15%,
         #2878cc 35%,
         #4a9cdd 55%,
         #7cbfe8 75%,
         #b5ddf5 90%,
-        #d4eeff 100%
+        #c6e8ff 100%
     );
     will-change: transform;
 }
 
-/* Задний холм (справа, ниже) */
 .xp-hill-back {
     position: absolute;
     bottom: -3%;
     left: 40%;
-    width: 120%;
+    width: 160%;
     height: 38%;
     background: linear-gradient(to bottom,
         #4a9e1e 0%,
@@ -190,15 +187,14 @@ body { position: relative; }
     z-index: 4;
 }
 
-/* Основной холм — плавная дуга с верхушкой слева */
 .xp-hill {
     position: absolute;
     bottom: -8%;
     left: -100%;
-    width: 200%;
-    height: 40%;
+    width: 190%;
+    height: 38%;
     background: 
-        radial-gradient(ellipse 35% 45% at 22% 10%, rgba(229, 255, 123, 0.678) 0%, transparent 20%),
+        radial-gradient(ellipse 35% 45% at 22% 10%, rgba(240, 255, 180, 0.7) 0%, transparent 70%),
         radial-gradient(ellipse 30% 38% at 45% 25%, rgba(210, 255, 150, 0.45) 0%, transparent 70%),
         radial-gradient(ellipse 25% 30% at 65% 50%, rgba(190, 245, 130, 0.3) 0%, transparent 70%),
         radial-gradient(ellipse 45% 30% at 15% 85%, rgba(20, 50, 10, 0.35) 0%, transparent 70%),
@@ -220,23 +216,22 @@ body { position: relative; }
     z-index: 5;
 }
 
-/* Тени облаков на холме */
 .xp-cloud-shadows {
     position: absolute;
     bottom: 0;
     left: 0;
-    width: 120%;
+    width: 165%;
     height: 45%;
     z-index: 6;
     pointer-events: none;
     background-image:
-        radial-gradient(ellipse 200px 45px at 15% 55%, rgba(20, 50, 10, 0.35) 0%, transparent 70%),
-        radial-gradient(ellipse 240px 55px at 40% 65%, rgba(20, 50, 10, 0.3) 0%, transparent 70%),
+        radial-gradient(ellipse 200px 45px at 15% 55%, rgba(10, 50, 37, 0.35) 0%, transparent 70%),
+        radial-gradient(ellipse 240px 55px at 40% 65%, rgba(4, 63, 27, 0.3) 0%, transparent 70%),
         radial-gradient(ellipse 180px 40px at 65% 60%, rgba(20, 50, 10, 0.32) 0%, transparent 70%),
-        radial-gradient(ellipse 220px 50px at 85% 70%, rgba(20, 50, 10, 0.28) 0%, transparent 70%);
+        radial-gradient(ellipse 220px 50px at 85% 70%, rgba(21, 59, 8, 0.28) 0%, transparent 70%);
     filter: blur(18px);
     mix-blend-mode: multiply;
-    opacity: 0.85;
+    opacity: 0.80;
     will-change: transform, margin;
 }
 
@@ -247,14 +242,13 @@ body { position: relative; }
     right: 18%;
     width: 800px;
     height: 800px;
-    margin: -400px -400px 0 0;  /* компенсируем увеличение */
+    margin: -400px -400px 0 0;
     pointer-events: none;
     z-index: 6;
     will-change: transform;
     transform-origin: center center;
 }
 
-/* Радужный ореол — вращается и пульсирует */
 .xp-sun-rainbow {
     position: absolute;
     top: 50%; left: 50%;
@@ -276,7 +270,6 @@ body { position: relative; }
     animation: rainbowRotate 25s linear infinite, rainbowPulse 4s ease-in-out infinite;
     opacity: 0.75;
 }
-
 @keyframes rainbowRotate {
     from { transform: rotate(0deg); }
     to   { transform: rotate(360deg); }
@@ -286,23 +279,6 @@ body { position: relative; }
     50%      { opacity: 0.9; }
 }
 
-/* Лучи — пульсируют и вращаются */
-/* ===== ЛУЧИ — 3 СЛОЯ С РАЗНОЙ ПУЛЬСАЦИЕЙ ===== */
-
-/* Общие стили для всех лучей */
-.xp-sun-rays {
-    position: absolute;
-    top: 50%; left: 50%;
-    width: 700px; height: 700px;
-    margin: -350px 0 0 -350px;
-    border-radius: 50%;
-    mask-image: radial-gradient(circle, black 0%, black 25%, transparent 60%);
-    -webkit-mask-image: radial-gradient(circle, black 0%, black 25%, transparent 60%);
-    filter: blur(2px);
-    pointer-events: none;
-}
-
-/* ===== ЛУЧИ СОЛНЦА (днём) ===== */
 .xp-sun-rays {
     position: absolute;
     top: 50%; left: 50%;
@@ -325,71 +301,25 @@ body { position: relative; }
         transparent 90%
     );
     filter: blur(2px);
-    transition: opacity 0.8s ease, filter 0.8s ease;
 }
-
-/* Солнечные лучи (жёлтые) — днём */
 .xp-sun-rays-1 {
-    background: repeating-conic-gradient(
-        from 0deg,
-        rgba(255, 245, 210, 0.6) 0deg,
-        rgba(255, 245, 210, 0.6) 2deg,
-        transparent 2deg,
-        transparent 15deg
-    );
+    background: repeating-conic-gradient(from 0deg,
+        rgba(255, 251, 210, 0.6) 0deg, rgba(233, 220, 183, 0.6) 2deg,
+        transparent 2deg, transparent 15deg);
     animation: raysPulse1 5s ease-in-out infinite, raysRotate1 80s linear infinite;
 }
 .xp-sun-rays-2 {
-    background: repeating-conic-gradient(
-        from 8deg,
-        rgba(255, 250, 220, 0.45) 0deg,
-        rgba(255, 250, 220, 0.45) 1.5deg,
-        transparent 1.5deg,
-        transparent 22deg
-    );
+    background: repeating-conic-gradient(from 8deg,
+        rgba(255, 250, 220, 0.45) 0deg, rgba(255, 250, 220, 0.45) 1.5deg,
+        transparent 1.5deg, transparent 22deg);
     animation: raysPulse2 3.5s ease-in-out infinite, raysRotate2 60s linear infinite reverse;
 }
 .xp-sun-rays-3 {
-    background: repeating-conic-gradient(
-        from 15deg,
-        rgba(255, 240, 190, 0.35) 0deg,
-        rgba(255, 240, 190, 0.35) 1deg,
-        transparent 1deg,
-        transparent 35deg
-    );
+    background: repeating-conic-gradient(from 15deg,
+        rgba(255, 240, 190, 0.35) 0deg, rgba(255, 240, 190, 0.35) 1deg,
+        transparent 1deg, transparent 35deg);
     animation: raysPulse3 7s ease-in-out infinite, raysRotate3 110s linear infinite;
 }
-
-/* ===== НОЧЬЮ — ЛУЧИ ЛУНЫ (СИНИЕ) ===== */
-body.night-mode .xp-sun-rays-1 {
-    background: repeating-conic-gradient(
-        from 0deg,
-        rgba(180, 210, 255, 0.55) 0deg,
-        rgba(180, 210, 255, 0.55) 2deg,
-        transparent 2deg,
-        transparent 15deg
-    );
-}
-body.night-mode .xp-sun-rays-2 {
-    background: repeating-conic-gradient(
-        from 8deg,
-        rgba(160, 200, 255, 0.4) 0deg,
-        rgba(160, 200, 255, 0.4) 1.5deg,
-        transparent 1.5deg,
-        transparent 22deg
-    );
-}
-body.night-mode .xp-sun-rays-3 {
-    background: repeating-conic-gradient(
-        from 15deg,
-        rgba(140, 190, 255, 0.3) 0deg,
-        rgba(140, 190, 255, 0.3) 1deg,
-        transparent 1deg,
-        transparent 35deg
-    );
-}
-
-/* Пульсации с разной амплитудой и фазой */
 @keyframes raysPulse1 {
     0%, 100% { transform: scale(1);    opacity: 0.55; }
     50%      { transform: scale(1.35); opacity: 1; }
@@ -404,22 +334,10 @@ body.night-mode .xp-sun-rays-3 {
     40%      { transform: scale(1.4);  opacity: 0.65; }
     75%      { transform: scale(0.95); opacity: 0.25; }
 }
+@keyframes raysRotate1 { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes raysRotate2 { from { transform: rotate(0deg); } to { transform: rotate(-360deg); } }
+@keyframes raysRotate3 { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-/* Вращения с разными скоростями */
-@keyframes raysRotate1 {
-    from { transform: rotate(0deg); }
-    to   { transform: rotate(360deg); }
-}
-@keyframes raysRotate2 {
-    from { transform: rotate(0deg); }
-    to   { transform: rotate(-360deg); }
-}
-@keyframes raysRotate3 {
-    from { transform: rotate(0deg); }
-    to   { transform: rotate(360deg); }
-}
-
-/* Жёлтый ореол — пульсирует */
 .xp-sun-halo {
     position: absolute;
     top: 50%; left: 50%;
@@ -440,7 +358,6 @@ body.night-mode .xp-sun-rays-3 {
     50%      { transform: scale(1.15); opacity: 1; }
 }
 
-/* Ядро — пульсирует */
 .xp-sun-core {
     position: absolute;
     top: 50%; left: 50%;
@@ -464,34 +381,72 @@ body.night-mode .xp-sun-rays-3 {
     50%      { transform: scale(1.15); }
 }
 
-/* ===== ОБЛАКА ===== */
+/* ===== ЛУНА ===== */
+.xp-moon {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 90px; height: 90px;
+    margin: -45px 0 0 -45px;
+    border-radius: 50%;
+    background: 
+        radial-gradient(circle 12px at 35% 40%, rgba(140, 140, 150, 0.6) 0%, transparent 100%),
+        radial-gradient(circle 8px at 60% 55%, rgba(140, 140, 150, 0.5) 0%, transparent 100%),
+        radial-gradient(circle 6px at 45% 65%, rgba(140, 140, 150, 0.4) 0%, transparent 100%),
+        radial-gradient(circle 10px at 70% 35%, rgba(140, 140, 150, 0.5) 0%, transparent 100%),
+        radial-gradient(circle 5px at 25% 55%, rgba(140, 140, 150, 0.4) 0%, transparent 100%),
+        radial-gradient(circle 7px at 55% 25%, rgba(140, 140, 150, 0.45) 0%, transparent 100%),
+        radial-gradient(circle at 40% 35%, #f0f0f5 0%, #d8d8e0 40%, #c0c0c8 70%, #a8a8b0 100%);
+    box-shadow: 
+        0 0 30px rgba(180, 220, 255, 0.6),
+        0 0 60px rgba(150, 200, 255, 0.4),
+        0 0 100px rgba(120, 180, 255, 0.25),
+        inset -8px -8px 20px rgba(80, 80, 100, 0.4);
+    opacity: 0;
+    transition: opacity 0.8s ease;
+    pointer-events: none;
+    z-index: 10;
+}
+body.night-mode .xp-moon {
+    opacity: 1;
+    animation: moonGlow 4s ease-in-out infinite;
+}
+@keyframes moonGlow {
+    0%, 100% {
+        box-shadow: 
+            0 0 30px rgba(180, 220, 255, 0.6),
+            0 0 60px rgba(150, 200, 255, 0.4),
+            0 0 100px rgba(120, 180, 255, 0.25),
+            inset -8px -8px 20px rgba(80, 80, 100, 0.4);
+    }
+    50% {
+        box-shadow: 
+            0 0 40px rgba(180, 220, 255, 0.8),
+            0 0 80px rgba(150, 200, 255, 0.55),
+            0 0 130px rgba(120, 180, 255, 0.35),
+            inset -8px -8px 20px rgba(80, 80, 100, 0.4);
+    }
+}
+
 /* ===== ОБЛАКА ===== */
 .xp-clouds,
 .xp-clouds-2 {
     position: absolute;
     top: 0; left: 0;
-    width: 200%;      /* две ширины экрана — для бесшовного цикла */
-    height: 70%;
+    width: 200%; height: 70%;
     pointer-events: none;
     will-change: transform, margin;
-    background-repeat: repeat-x;  /* повтор по горизонтали */
+    background-repeat: repeat-x;
 }
-
 .xp-clouds {
-    background-size: 2000px 100%;
-    background-repeat: repeat-x;
-    animation: cloudDriftLeft 140s linear infinite;
+    z-index: 8;
+    animation: cloudDrift 140s linear infinite;
 }
-
 .xp-clouds-2 {
-    background-size: 2500px 100%;
-    background-repeat: repeat-x;
-    animation: cloudDriftLeft 220s linear infinite;
+    z-index: 2;
     opacity: 0.6;
+    animation: cloudDrift 220s linear infinite;
 }
-
-/* Плывут ВЛЕВО: от 0 к -50% (левая половина уходит за экран, правая встаёт на её место) */
-@keyframes cloudDriftLeft {
+@keyframes cloudDrift {
     from { transform: translateX(0); }
     to   { transform: translateX(-50%); }
 }
@@ -539,6 +494,7 @@ body.night-mode .xp-sun-rays-3 {
         radial-gradient(circle 65px at 1900px 150px, rgba(255,255,255,0.5) 0%, transparent 70%),
         radial-gradient(ellipse 90px 18px at 1900px 170px, rgba(50, 90, 140, 0.25) 0%, transparent 70%);
     filter: blur(2.5px);
+    background-size: 2000px 100%;
 }
 
 .xp-clouds-2 {
@@ -547,22 +503,142 @@ body.night-mode .xp-sun-rays-3 {
         radial-gradient(circle 55px at 360px 190px, #ffffff 0%, #ffffff 50%, transparent 100%),
         radial-gradient(circle 45px at 420px 185px, #ffffff 0%, #ffffff 50%, transparent 100%),
         radial-gradient(circle 75px at 360px 200px, rgba(255,255,255,0.45) 0%, transparent 70%),
-        
         radial-gradient(circle 50px at 700px 200px, #ffffff 0%, #ffffff 50%, transparent 100%),
         radial-gradient(circle 65px at 760px 210px, #ffffff 0%, #ffffff 50%, transparent 100%),
         radial-gradient(circle 48px at 820px 205px, #ffffff 0%, #ffffff 50%, transparent 100%),
         radial-gradient(circle 85px at 760px 220px, rgba(255,255,255,0.45) 0%, transparent 70%),
-        
         radial-gradient(circle 45px at 1100px 160px, #ffffff 0%, #ffffff 50%, transparent 100%),
         radial-gradient(circle 60px at 1160px 170px, #ffffff 0%, #ffffff 50%, transparent 100%),
         radial-gradient(circle 50px at 1220px 165px, #ffffff 0%, #ffffff 50%, transparent 100%),
         radial-gradient(circle 80px at 1160px 180px, rgba(255,255,255,0.45) 0%, transparent 70%),
-        
         radial-gradient(circle 38px at 1550px 190px, #ffffff 0%, #ffffff 50%, transparent 100%),
         radial-gradient(circle 52px at 1600px 200px, #ffffff 0%, #ffffff 50%, transparent 100%),
         radial-gradient(circle 42px at 1650px 195px, #ffffff 0%, #ffffff 50%, transparent 100%),
         radial-gradient(circle 70px at 1600px 210px, rgba(255,255,255,0.45) 0%, transparent 70%);
     filter: blur(5px);
+    background-size: 2500px 100%;
+}
+
+/* ============================================
+   ДОЖДЬ — финальная версия
+   ============================================ */
+.xp-rain {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0;
+    transition: opacity 2s ease;
+    
+    filter: opacity(0.6);
+    
+    background-image:
+        radial-gradient(ellipse 8px 12px at 15% 20%, rgba(220, 240, 255, 0.95) 0%, rgba(180, 210, 240, 0.5) 50%, transparent 75%),
+        radial-gradient(ellipse 10px 15px at 35% 45%, rgba(220, 240, 255, 0.9) 0%, rgba(180, 210, 240, 0.5) 50%, transparent 75%),
+        radial-gradient(ellipse 7px 11px at 55% 15%, rgba(220, 240, 255, 0.95) 0%, rgba(180, 210, 240, 0.5) 50%, transparent 75%),
+        radial-gradient(ellipse 12px 18px at 75% 60%, rgba(220, 240, 255, 0.95) 0%, rgba(180, 210, 240, 0.5) 50%, transparent 75%),
+        radial-gradient(ellipse 8px 13px at 90% 30%, rgba(220, 240, 255, 0.9) 0%, rgba(180, 210, 240, 0.5) 50%, transparent 75%),
+        radial-gradient(ellipse 9px 14px at 10% 75%, rgba(220, 240, 255, 0.95) 0%, rgba(180, 210, 240, 0.5) 50%, transparent 75%),
+        radial-gradient(ellipse 7px 12px at 45% 85%, rgba(220, 240, 255, 0.95) 0%, rgba(180, 210, 240, 0.5) 50%, transparent 75%),
+        radial-gradient(ellipse 10px 15px at 65% 90%, rgba(220, 240, 255, 0.9) 0%, rgba(180, 210, 240, 0.5) 50%, transparent 75%),
+        radial-gradient(ellipse 8px 13px at 25% 55%, rgba(220, 240, 255, 0.95) 0%, rgba(180, 210, 240, 0.5) 50%, transparent 75%),
+        radial-gradient(ellipse 11px 17px at 85% 80%, rgba(220, 240, 255, 0.9) 0%, rgba(180, 210, 240, 0.5) 50%, transparent 75%);
+    background-size: 
+        400px 400px, 350px 350px, 420px 420px, 380px 380px, 360px 360px,
+        410px 410px, 390px 390px, 370px 370px, 440px 440px, 340px 340px;
+    background-repeat: repeat;
+}
+
+body.rain-active .xp-rain {
+    opacity: 1;
+    animation: rainDropMove 3s linear infinite;
+}
+
+@keyframes rainDropMove {
+    0%   { background-position: 0 0, 0 0, 0 0, 0 0, 0 0, 0 0, 0 0, 0 0, 0 0, 0 0; }
+    100% { background-position: 0 400px, 0 350px, 0 420px, 0 380px, 0 360px, 0 410px, 0 390px, 0 370px, 0 440px, 0 340px; }
+}
+
+.xp-clouds-rain {
+    position: absolute;
+    top: 0; left: 0;
+    width: 200%; height: 70%;
+    pointer-events: none;
+    z-index: 3;
+    opacity: 0;
+    transition: opacity 2s ease;
+    will-change: margin;
+    
+    background-image:
+        radial-gradient(circle 120px at 100px 80px, rgba(50, 65, 85, 0.95) 0%, rgba(50, 65, 85, 0.6) 60%, transparent 100%),
+        radial-gradient(circle 150px at 220px 100px, rgba(45, 60, 80, 0.95) 0%, rgba(45, 60, 80, 0.5) 60%, transparent 100%),
+        radial-gradient(circle 110px at 350px 90px, rgba(55, 70, 90, 0.9) 0%, transparent 100%),
+        radial-gradient(circle 130px at 600px 60px, rgba(50, 65, 85, 0.95) 0%, rgba(50, 65, 85, 0.5) 60%, transparent 100%),
+        radial-gradient(circle 160px at 740px 90px, rgba(45, 60, 80, 0.95) 0%, rgba(45, 60, 80, 0.5) 60%, transparent 100%),
+        radial-gradient(circle 115px at 880px 75px, rgba(55, 70, 90, 0.9) 0%, transparent 100%),
+        radial-gradient(circle 125px at 1100px 110px, rgba(50, 65, 85, 0.95) 0%, transparent 100%),
+        radial-gradient(circle 145px at 1220px 130px, rgba(55, 70, 90, 0.95) 0%, transparent 100%),
+        radial-gradient(circle 105px at 1350px 115px, rgba(50, 65, 85, 0.9) 0%, transparent 100%),
+        radial-gradient(circle 140px at 1600px 70px, rgba(45, 60, 80, 0.95) 0%, transparent 100%),
+        radial-gradient(circle 120px at 1750px 95px, rgba(55, 70, 90, 0.95) 0%, transparent 100%),
+        radial-gradient(circle 150px at 1880px 80px, rgba(50, 65, 85, 0.9) 0%, transparent 100%);
+    filter: blur(8px);
+}
+
+body.rain-active .xp-clouds-rain {
+    opacity: 1;
+    animation: cloudRainDrift 90s linear infinite;
+}
+@keyframes cloudRainDrift {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+}
+
+/* Серая дымка */
+body.rain-active .xp-background::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: linear-gradient(to bottom,
+        rgba(40, 55, 80, 0.6) 0%,
+        rgba(50, 65, 90, 0.45) 40%,
+        rgba(60, 80, 100, 0.3) 70%,
+        rgba(60, 80, 100, 0.2) 100%
+    );
+    pointer-events: none;
+    z-index: 5;
+    animation: rainFadeIn 2s ease forwards;
+}
+@keyframes rainFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+body.rain-active .xp-clouds,
+body.rain-active .xp-clouds-2 {
+    filter: brightness(0.45) saturate(0.35);
+    opacity: 0.35;
+    transition: filter 2s ease, opacity 2s ease;
+}
+body.rain-active .xp-sun {
+    opacity: 0.15;
+    transition: opacity 2s ease;
+}
+body.rain-active .xp-cloud-shadows {
+    opacity: 1;
+    filter: blur(25px);
+    transition: opacity 2s ease, filter 2s ease;
+}
+
+/* Ночью — только виньетка */
+body.night-mode .xp-rain,
+body.night-mode .xp-clouds-rain {
+    opacity: 0 !important;
+}
+body.night-mode.rain-active .xp-background::after {
+    display: none;
 }
 
 /* ============================================
@@ -576,11 +652,7 @@ canvas {
     cursor: crosshair;
     z-index: 2;
 }
-
-#bubbleCanvas {
-    z-index: 2;
-}
-
+#bubbleCanvas { z-index: 2; }
 #paintCanvas {
     position: static;
     background: #fff;
@@ -619,13 +691,8 @@ canvas {
     border-radius: 3px 3px 50% 50%;
     pointer-events: none;
 }
-.win-btn:hover {
-    background: linear-gradient(to bottom, #ffffff 0%, #e0effc 45%, #d0e5f5 50%, #eaf4fc 100%);
-}
-.win-btn:active {
-    transform: translateY(1px);
-    box-shadow: 0 1px 1px rgba(0,0,0,0.15), inset 0 2px 4px rgba(12,113,198,0.2);
-}
+.win-btn:hover { background: linear-gradient(to bottom, #ffffff 0%, #e0effc 45%, #d0e5f5 50%, #eaf4fc 100%); }
+.win-btn:active { transform: translateY(1px); box-shadow: 0 1px 1px rgba(0,0,0,0.15), inset 0 2px 4px rgba(12,113,198,0.2); }
 .win-btn.active {
     background: linear-gradient(to bottom, #a4c8ea 0%, #8ab8e0 45%, #78a8d4 50%, #98c2e6 100%);
     color: #fff;
@@ -661,9 +728,6 @@ canvas {
 .pop-all-btn:hover { transform: translateX(-50%) translateY(-2px); }
 .pop-all-btn:active { transform: translateX(-50%) translateY(0); }
 
-/* ============================================
-   СЧЁТЧИКИ (показываются только в своей игре)
-   ============================================ */
 .score-counter {
     position: fixed;
     top: 30px; left: 30px;
@@ -681,23 +745,9 @@ canvas {
 }
 .bubbles-score,
 .windows-score { display: none; }
-
-/* Счётчик пузырей — только в игре «Пузыри» */
-#bubblesGame.active ~ .bubbles-score,
-body:has(#bubblesGame.active) .bubbles-score {
-    display: block;
-}
-
-/* Счётчик окон — только в игре «Окна» */
-#windowsGame.active ~ .windows-score,
-body:has(#windowsGame.active) .windows-score {
-    display: block;
-}
-
-/* Кнопка «Лопнуть все» — только в игре «Пузыри» */
-body:has(#bubblesGame.active) .pop-all-btn {
-    display: block;
-}
+body:has(#bubblesGame.active) .bubbles-score { display: block; }
+body:has(#windowsGame.active) .windows-score { display: block; }
+body:has(#bubblesGame.active) .pop-all-btn { display: block; }
 
 /* ============================================
    ОКНА WINDOWS 7
@@ -719,7 +769,6 @@ body:has(#bubblesGame.active) .pop-all-btn {
     from { transform: scale(0.6) translateY(20px); opacity: 0; }
     to   { transform: scale(1) translateY(0); opacity: 1; }
 }
-
 .win7-window.closing {
     animation: windowClose 0.6s ease-in forwards;
     pointer-events: none;
@@ -792,7 +841,6 @@ body:has(#bubblesGame.active) .pop-all-btn {
     border-left: 1px solid #b8d4ec;
     border-right: 1px solid #b8d4ec;
 }
-
 .win7-icon {
     font-size: 36px;
     line-height: 1;
@@ -804,7 +852,6 @@ body:has(#bubblesGame.active) .pop-all-btn {
     justify-content: center;
     filter: drop-shadow(0 2px 3px rgba(0,0,0,0.15));
 }
-
 .win7-message {
     font-size: 16px;
     color: #1a3a5c;
@@ -813,7 +860,6 @@ body:has(#bubblesGame.active) .pop-all-btn {
     padding-top: 6px;
     letter-spacing: 0.3px;
 }
-
 .win7-cat-image {
     display: block;
     max-width: 100%;
@@ -823,7 +869,6 @@ body:has(#bubblesGame.active) .pop-all-btn {
     border-radius: 4px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
-
 .win7-body.with-cat {
     flex-direction: column;
     align-items: stretch;
@@ -835,7 +880,6 @@ body:has(#bubblesGame.active) .pop-all-btn {
     margin-bottom: 6px;
 }
 .win7-body.with-cat .win7-icon { display: none; }
-
 .win7-buttons {
     padding: 6px 20px 16px;
     display: flex;
@@ -846,7 +890,6 @@ body:has(#bubblesGame.active) .pop-all-btn {
     border-top: none;
     border-radius: 0 0 6px 6px;
 }
-
 .win7-ok {
     min-width: 80px;
     padding: 6px 18px;
@@ -884,30 +927,11 @@ body:has(#bubblesGame.active) .pop-all-btn {
     transition: opacity 0.4s ease, visibility 0.4s ease;
     pointer-events: none;
 }
-.funny-bsod.active {
-    opacity: 1;
-    visibility: visible;
-}
-.funny-bsod-content {
-    max-width: 700px;
-    padding: 40px;
-    text-align: left;
-}
-.funny-bsod-smiley {
-    font-size: 84px;
-    margin-bottom: 30px;
-    font-family: 'HomeVideo', sans-serif;
-}
-.funny-bsod-text {
-    font-size: 20px;
-    line-height: 1.6;
-    margin-bottom: 30px;
-}
-.funny-bsod-hint {
-    font-size: 16px;
-    opacity: 0.7;
-    font-style: italic;
-}
+.funny-bsod.active { opacity: 1; visibility: visible; }
+.funny-bsod-content { max-width: 700px; padding: 40px; text-align: left; }
+.funny-bsod-smiley { font-size: 84px; margin-bottom: 30px; font-family: 'HomeVideo', sans-serif; }
+.funny-bsod-text { font-size: 20px; line-height: 1.6; margin-bottom: 30px; }
+.funny-bsod-hint { font-size: 16px; opacity: 0.7; font-style: italic; }
 
 /* ============================================
    ИГРА 3: БРАУЗЕР
@@ -920,7 +944,6 @@ body:has(#bubblesGame.active) .pop-all-btn {
     display: flex;
     flex-direction: column;
 }
-
 .browser-toolbar {
     display: flex;
     align-items: center;
@@ -932,12 +955,9 @@ body:has(#bubblesGame.active) .pop-all-btn {
     flex-shrink: 0;
     z-index: 10;
 }
-
 .browser-nav-buttons { display: flex; gap: 3px; }
-
 .browser-nav-btn {
-    width: 30px;
-    height: 30px;
+    width: 30px; height: 30px;
     border: 1px solid #6a9fd4;
     border-radius: 4px;
     background: linear-gradient(to bottom, #f5faff 0%, #dceaf6 50%, #c8ddec 100%);
@@ -950,7 +970,6 @@ body:has(#bubblesGame.active) .pop-all-btn {
 }
 .browser-nav-btn:hover { background: linear-gradient(to bottom, #ffffff 0%, #e6f2fb 50%, #d4e6f5 100%); }
 .browser-nav-btn:active { transform: translateY(1px); box-shadow: inset 0 2px 4px rgba(12,113,198,0.2); }
-
 .browser-address {
     flex: 1;
     display: flex;
@@ -966,7 +985,6 @@ body:has(#bubblesGame.active) .pop-all-btn {
     color: #1a3a5c;
 }
 .browser-address-lock { color: #5a8fc9; font-size: 12px; }
-
 .browser-counter {
     padding: 6px 14px;
     background: linear-gradient(to bottom, #fff8e0 0%, #ffe9a8 100%);
@@ -978,7 +996,6 @@ body:has(#bubblesGame.active) .pop-all-btn {
     white-space: nowrap;
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
 }
-
 .paint-tab-btn {
     width: 34px; height: 30px;
     border: 1px solid #6a9fd4;
@@ -994,7 +1011,6 @@ body:has(#bubblesGame.active) .pop-all-btn {
     50%      { transform: scale(1.1); }
 }
 .paint-tab-btn:hover { transform: scale(1.15); }
-
 .browser-page {
     position: relative;
     flex: 1;
@@ -1002,7 +1018,6 @@ body:has(#bubblesGame.active) .pop-all-btn {
     background: #fff;
 }
 
-/* MEME-кнопки */
 .meme-btn {
     position: absolute;
     width: 90px;
@@ -1048,7 +1063,6 @@ body:has(#bubblesGame.active) .pop-all-btn {
 }
 .meme-btn:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 #000; }
 .meme-btn:active { transform: scale(0.9); }
-
 .meme-btn.expiring { animation: memeFadeOut 0.5s ease-out forwards; pointer-events: none; }
 @keyframes memeFadeOut {
     0%   { transform: scale(1); opacity: 1; }
@@ -1061,7 +1075,6 @@ body:has(#bubblesGame.active) .pop-all-btn {
     100% { transform: scale(0) rotate(15deg); opacity: 0; }
 }
 
-/* Мемы с котами */
 .cat-meme {
     position: absolute;
     padding: 0;
@@ -1092,7 +1105,6 @@ body:has(#bubblesGame.active) .pop-all-btn {
 .cat-meme.expiring { animation: memeFadeOut 0.5s ease-out forwards; pointer-events: none; }
 .cat-meme.clicked { animation: memeClick 0.4s ease-out forwards; pointer-events: none; }
 
-/* Реклама */
 .ad-banner {
     position: absolute;
     padding: 12px 20px;
@@ -1136,7 +1148,6 @@ body:has(#bubblesGame.active) .pop-all-btn {
 .ad-banner .ad-close:hover { background: #cc0000; transform: scale(1.15); }
 .ad-banner.clicked { animation: memeClick 0.4s ease-out forwards; pointer-events: none; }
 
-/* Вирусная кнопка */
 .virus-btn {
     position: absolute;
     padding: 14px 22px;
@@ -1153,19 +1164,13 @@ body:has(#bubblesGame.active) .pop-all-btn {
     animation: virusPulse 1s infinite;
     user-select: none;
 }
-.virus-btn small {
-    display: block;
-    font-size: 11px;
-    margin-top: 4px;
-    color: #333;
-}
+.virus-btn small { display: block; font-size: 11px; margin-top: 4px; color: #333; }
 @keyframes virusPulse {
     0%, 100% { transform: scale(1); }
     50%      { transform: scale(1.05); }
 }
 .virus-btn:hover { transform: scale(1.1); }
 
-/* Синий экран (вирус) */
 .bsod-screen {
     position: fixed;
     top: 0; left: 0;
@@ -1179,39 +1184,13 @@ body:has(#bubblesGame.active) .pop-all-btn {
     z-index: 9999;
 }
 .bsod-screen.active { display: flex; }
-.bsod-content {
-    text-align: left;
-    max-width: 700px;
-    padding: 40px;
-    font-size: 18px;
-    line-height: 1.6;
-}
-.bsod-smiley {
-    font-size: 72px;
-    margin-bottom: 20px;
-    font-family: 'HomeVideo', sans-serif;
-}
-.bsod-title {
-    font-size: 24px;
-    margin-bottom: 20px;
-    font-family: 'HomeVideo', sans-serif;
-}
+.bsod-content { text-align: left; max-width: 700px; padding: 40px; font-size: 18px; line-height: 1.6; }
+.bsod-smiley { font-size: 72px; margin-bottom: 20px; font-family: 'HomeVideo', sans-serif; }
+.bsod-title { font-size: 24px; margin-bottom: 20px; font-family: 'HomeVideo', sans-serif; }
 .bsod-text { font-size: 18px; margin-bottom: 30px; }
-.bsod-progress {
-    width: 100%;
-    height: 20px;
-    background: #000055;
-    border: 2px solid #fff;
-    margin-top: 20px;
-}
-.bsod-progress-bar {
-    height: 100%;
-    background: #fff;
-    width: 0%;
-    transition: width 2.5s linear;
-}
+.bsod-progress { width: 100%; height: 20px; background: #000055; border: 2px solid #fff; margin-top: 20px; }
+.bsod-progress-bar { height: 100%; background: #fff; width: 0%; transition: width 2.5s linear; }
 
-/* PAINT */
 .paint-modal {
     position: fixed;
     top: 0; left: 0;
@@ -1255,23 +1234,9 @@ body:has(#bubblesGame.active) .pop-all-btn {
     font-family: 'HomeVideo', sans-serif;
 }
 .paint-close:hover { background: linear-gradient(to bottom, #ffb0b0, #e04a4a); }
-.paint-body {
-    display: flex;
-    gap: 10px;
-    padding: 12px;
-    background: #e8f2fb;
-}
-.paint-tools {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    width: 70px;
-}
-.paint-colors {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 4px;
-}
+.paint-body { display: flex; gap: 10px; padding: 12px; background: #e8f2fb; }
+.paint-tools { display: flex; flex-direction: column; gap: 10px; width: 70px; }
+.paint-colors { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
 .paint-color-btn {
     width: 100%;
     aspect-ratio: 1;
@@ -1281,15 +1246,8 @@ body:has(#bubblesGame.active) .pop-all-btn {
     transition: transform 0.1s;
 }
 .paint-color-btn:hover { transform: scale(1.15); }
-.paint-color-btn.active {
-    border-color: #ff0000;
-    box-shadow: 0 0 0 2px #ff0000;
-}
-.paint-sizes {
-    display: flex;
-    gap: 4px;
-    justify-content: center;
-}
+.paint-color-btn.active { border-color: #ff0000; box-shadow: 0 0 0 2px #ff0000; }
+.paint-sizes { display: flex; gap: 4px; justify-content: center; }
 .paint-size-btn {
     width: 20px; height: 20px;
     border: 1px solid #5a8fc9;
@@ -1302,10 +1260,7 @@ body:has(#bubblesGame.active) .pop-all-btn {
     justify-content: center;
     font-size: 10px;
 }
-.paint-size-btn.active {
-    background: #5a8fc9;
-    color: #fff;
-}
+.paint-size-btn.active { background: #5a8fc9; color: #fff; }
 .paint-clear-btn {
     padding: 6px 8px;
     font-family: 'HomeVideo', sans-serif;
@@ -1318,7 +1273,30 @@ body:has(#bubblesGame.active) .pop-all-btn {
 }
 .paint-clear-btn:hover { background: linear-gradient(to bottom, #fff, #e6f2fb); }
 
-/* Кнопка день/ночь — рядом с меню */
+.paint-notification {
+    position: fixed;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%) translateY(30px);
+    padding: 14px 28px;
+    background: linear-gradient(to bottom, #f0f8ff 0%, #d4e8fb 100%);
+    border: 2px solid #6a9fd4;
+    border-radius: 8px;
+    font-family: 'HomeVideo', sans-serif;
+    font-size: 16px;
+    color: #1a3a5c;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.9);
+    z-index: 2000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.8);
+}
+.paint-notification.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ============================================
+   КНОПКА ДЕНЬ/НОЧЬ
+   ============================================ */
 .day-night-btn {
     width: 40px;
     height: 40px;
@@ -1331,9 +1309,7 @@ body:has(#bubblesGame.active) .pop-all-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 
-        0 2px 6px rgba(0, 0, 0, 0.25),
-        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.8);
     transition: all 0.3s ease;
     font-family: 'HomeVideo', sans-serif;
     flex-shrink: 0;
@@ -1341,43 +1317,23 @@ body:has(#bubblesGame.active) .pop-all-btn {
 }
 .day-night-btn:hover { transform: scale(1.1); }
 .day-night-btn:active { transform: scale(0.95); }
-
 body.night-mode .day-night-btn {
     background: linear-gradient(to bottom, #4a5a7a 0%, #2a3a5a 100%);
     border-color: rgba(180, 200, 255, 0.6);
     color: #d0e8ff;
-    box-shadow: 
-        0 2px 6px rgba(0, 0, 0, 0.4),
-        0 0 20px rgba(120, 180, 255, 0.4),
-        inset 0 1px 0 rgba(200, 220, 255, 0.5);
-}
-
-/* Мобильная версия */
-@media (max-width: 768px) {
-    .day-night-btn {
-        width: 34px;
-        height: 34px;
-        font-size: 15px;
-    }
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4), 0 0 20px rgba(120, 180, 255, 0.4), inset 0 1px 0 rgba(200, 220, 255, 0.5);
 }
 
 /* ============================================
-   НОЧНОЙ РЕЖИМ — ОБЩИЕ
+   НОЧНОЙ РЕЖИМ
    ============================================ */
-body.night-mode {
-    background: #0a0a1a;
-}
-
-/* Тёмные кнопки меню */
+body.night-mode { background: #0a0a1a; }
 body.night-mode .win-btn {
     background: linear-gradient(to bottom, #2a3a5a 0%, #1a2a4a 45%, #0f1e3a 50%, #1e2e4e 100%);
     border-color: #4a6a9a;
     color: #d0e8ff;
     text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
-    box-shadow:
-        0 1px 2px rgba(0, 0, 0, 0.4),
-        inset 0 1px 0 rgba(150, 200, 255, 0.3),
-        inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(150, 200, 255, 0.3), inset 0 -1px 0 rgba(0, 0, 0, 0.3);
 }
 body.night-mode .win-btn::before {
     background: linear-gradient(to bottom, rgba(180, 220, 255, 0.3), transparent);
@@ -1391,14 +1347,10 @@ body.night-mode .win-btn.active {
     text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
     border-color: #6a8aba;
 }
-
-/* Тёмная панель переключателя */
 body.night-mode .mode-switcher {
     background: rgba(30, 50, 90, 0.6);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(150, 200, 255, 0.3);
 }
-
-/* Тёмные счётчики */
 body.night-mode .score-counter {
     background: rgba(20, 40, 80, 0.85);
     border-color: #4a6a9a;
@@ -1407,9 +1359,6 @@ body.night-mode .score-counter {
     text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
 }
 
-/* ============================================
-   НОЧНОЙ РЕЖИМ — ПУЗЫРИ
-   ============================================ */
 body.night-mode #bubblesGame::after {
     content: '';
     position: absolute;
@@ -1424,22 +1373,12 @@ body.night-mode #bubblesGame::after {
     z-index: 5;
 }
 
-/* ============================================
-   НОЧНОЙ РЕЖИМ — ОКНА (НЕБО, ХОЛМЫ, ЛУНА)
-   ============================================ */
 body.night-mode .xp-sky {
     background: linear-gradient(to bottom,
-        #050515 0%,
-        #0a1020 15%,
-        #102040 35%,
-        #1a2a5a 55%,
-        #2a3a6a 75%,
-        #3a4a7a 90%,
-        #4a5a8a 100%
+        #050515 0%, #0a1020 15%, #102040 35%,
+        #1a2a5a 55%, #2a3a6a 75%, #3a4a7a 90%, #4a5a8a 100%
     );
 }
-
-/* Звёзды через radial-gradient */
 body.night-mode .xp-sky::before {
     content: '';
     position: absolute;
@@ -1472,37 +1411,22 @@ body.night-mode .xp-sky::before {
     0%   { opacity: 0.6; }
     100% { opacity: 1; }
 }
-
-/* Тёмные облака */
 body.night-mode .xp-clouds,
 body.night-mode .xp-clouds-2 {
     filter: brightness(0.4) hue-rotate(180deg) saturate(0.5);
     opacity: 0.5;
 }
-
-/* Тёмные холмы */
 body.night-mode .xp-hill {
     background: 
         radial-gradient(ellipse 35% 45% at 22% 10%, rgba(80, 120, 80, 0.5) 0%, transparent 70%),
         radial-gradient(ellipse 30% 38% at 45% 25%, rgba(60, 100, 60, 0.4) 0%, transparent 70%),
-        linear-gradient(to bottom,
-            #2a4a1a 0%,
-            #1f3a12 15%,
-            #152a0a 40%,
-            #0d1f06 70%,
-            #061205 100%
-        );
+        linear-gradient(to bottom, #2a4a1a 0%, #1f3a12 15%, #152a0a 40%, #0d1f06 70%, #061205 100%);
     box-shadow: 
         inset 0 70px 120px rgba(100, 150, 100, 0.15),
         inset 0 -50px 120px rgba(0, 0, 0, 0.7);
 }
 body.night-mode .xp-hill-back {
-    background: linear-gradient(to bottom,
-        #1a3a10 0%,
-        #122a08 40%,
-        #0a1a05 70%,
-        #050a02 100%
-    );
+    background: linear-gradient(to bottom, #1a3a10 0%, #122a08 40%, #0a1a05 70%, #050a02 100%);
     box-shadow: 
         inset 0 40px 70px rgba(60, 100, 60, 0.15),
         inset 0 -30px 70px rgba(0, 0, 0, 0.7);
@@ -1514,91 +1438,32 @@ body.night-mode .xp-cloud-shadows {
         radial-gradient(ellipse 180px 40px at 65% 60%, rgba(0, 0, 0, 0.48) 0%, transparent 70%),
         radial-gradient(ellipse 220px 50px at 85% 70%, rgba(0, 0, 0, 0.42) 0%, transparent 70%);
 }
-
-/* Скрываем солнце ночью */
 body.night-mode .xp-sun-core,
 body.night-mode .xp-sun-halo,
 body.night-mode .xp-sun-rainbow {
     opacity: 0;
     transition: opacity 0.8s ease;
 }
-
-
-/* ============================================
-   ЛУНА
-   ============================================ */
-.xp-moon {
-    position: absolute;
-    top: 50%; left: 50%;
-    width: 90px; height: 90px;
-    margin: -45px 0 0 -45px;
-    border-radius: 50%;
-    background: 
-        /* Кратеры */
-        radial-gradient(circle 12px at 35% 40%, rgba(140, 140, 150, 0.6) 0%, transparent 100%),
-        radial-gradient(circle 8px at 60% 55%, rgba(140, 140, 150, 0.5) 0%, transparent 100%),
-        radial-gradient(circle 6px at 45% 65%, rgba(140, 140, 150, 0.4) 0%, transparent 100%),
-        radial-gradient(circle 10px at 70% 35%, rgba(140, 140, 150, 0.5) 0%, transparent 100%),
-        radial-gradient(circle 5px at 25% 55%, rgba(140, 140, 150, 0.4) 0%, transparent 100%),
-        radial-gradient(circle 7px at 55% 25%, rgba(140, 140, 150, 0.45) 0%, transparent 100%),
-        /* Основной диск луны */
-        radial-gradient(circle at 40% 35%, #f0f0f5 0%, #d8d8e0 40%, #c0c0c8 70%, #a8a8b0 100%);
-    box-shadow: 
-        0 0 30px rgba(180, 220, 255, 0.6),
-        0 0 60px rgba(150, 200, 255, 0.4),
-        0 0 100px rgba(120, 180, 255, 0.25),
-        inset -8px -8px 20px rgba(80, 80, 100, 0.4);
+body.night-mode .xp-sun-rays-1,
+body.night-mode .xp-sun-rays-2,
+body.night-mode .xp-sun-rays-3 {
     opacity: 0;
     transition: opacity 0.8s ease;
-    pointer-events: none;
-    z-index: 10;
 }
 
-body.night-mode .xp-moon {
-    opacity: 1;
-    animation: moonGlow 4s ease-in-out infinite;
-}
-
-@keyframes moonGlow {
-    0%, 100% {
-        box-shadow: 
-            0 0 30px rgba(180, 220, 255, 0.6),
-            0 0 60px rgba(150, 200, 255, 0.4),
-            0 0 100px rgba(120, 180, 255, 0.25),
-            inset -8px -8px 20px rgba(80, 80, 100, 0.4);
-    }
-    50% {
-        box-shadow: 
-            0 0 40px rgba(180, 220, 255, 0.8),
-            0 0 80px rgba(150, 200, 255, 0.55),
-            0 0 130px rgba(120, 180, 255, 0.35),
-            inset -8px -8px 20px rgba(80, 80, 100, 0.4);
-    }
-}
-
-/* ============================================
-   НОЧНОЙ РЕЖИМ — БРАУЗЕР
-   ============================================ */
-body.night-mode .browser-container {
-    background: #1a2a45;
-}
-
+body.night-mode .browser-container { background: #1a2a45; }
 body.night-mode .browser-toolbar {
     background: linear-gradient(to bottom, #2a3a5a 0%, #1f2e4a 50%, #152438 100%);
     border-bottom-color: #3a4a6a;
     box-shadow: inset 0 1px 0 rgba(150, 200, 255, 0.2);
 }
-
 body.night-mode .browser-nav-btn {
     background: linear-gradient(to bottom, #3a4a6a 0%, #2a3a5a 50%, #1f2e4a 100%);
     border-color: #4a6a9a;
     color: #d0e8ff;
     box-shadow: inset 0 1px 0 rgba(150, 200, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.3);
 }
-body.night-mode .browser-nav-btn:hover {
-    background: linear-gradient(to bottom, #4a5a7a 0%, #3a4a6a 50%, #2a3a5a 100%);
-}
-
+body.night-mode .browser-nav-btn:hover { background: linear-gradient(to bottom, #4a5a7a 0%, #3a4a6a 50%, #2a3a5a 100%); }
 body.night-mode .browser-address {
     background: #0f1e35;
     border-color: #3a4a6a;
@@ -1606,28 +1471,15 @@ body.night-mode .browser-address {
     box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 body.night-mode .browser-address-lock { color: #6a8aba; }
-
 body.night-mode .browser-counter {
     background: linear-gradient(to bottom, #3a4a2a 0%, #2a3a1a 100%);
     border-color: #5a6a3a;
     color: #e0f0c0;
 }
+body.night-mode .browser-page { background: #0a1525; }
+body.night-mode .meme-btn { filter: brightness(0.7) saturate(0.8); }
+body.night-mode .ad-banner { filter: brightness(0.65) saturate(0.8); }
 
-body.night-mode .browser-page {
-    background: #0a1525;
-}
-
-/* MEME-кнопки — приглушённые */
-body.night-mode .meme-btn {
-    filter: brightness(0.7) saturate(0.8);
-}
-
-/* Реклама — приглушённая */
-body.night-mode .ad-banner {
-    filter: brightness(0.65) saturate(0.8);
-}
-
-/* PAINT — тёмная тема */
 body.night-mode .paint-window {
     background: #1a2a45;
     border-color: #3a4a6a;
@@ -1637,44 +1489,17 @@ body.night-mode .paint-titlebar {
     border-bottom-color: #3a4a6a;
     color: #d0e8ff;
 }
-body.night-mode .paint-body {
-    background: #1a2a45;
-}
-body.night-mode #paintCanvas {
-    background: #f0f0f0;   /* холст остаётся светлым, как в Paint */
-    border-color: #3a4a6a;
-}
-body.night-mode .paint-color-btn {
-    border-color: #4a6a9a;
-}
-body.night-mode .paint-size-btn {
-    background: #2a3a5a;
-    border-color: #4a6a9a;
-    color: #d0e8ff;
-}
-body.night-mode .paint-size-btn.active {
-    background: #5a7aaa;
-    color: #ffffff;
-}
+body.night-mode .paint-body { background: #1a2a45; }
+body.night-mode #paintCanvas { background: #f0f0f0; border-color: #3a4a6a; }
+body.night-mode .paint-color-btn { border-color: #4a6a9a; }
+body.night-mode .paint-size-btn { background: #2a3a5a; border-color: #4a6a9a; color: #d0e8ff; }
+body.night-mode .paint-size-btn.active { background: #5a7aaa; color: #ffffff; }
 body.night-mode .paint-clear-btn {
     background: linear-gradient(to bottom, #3a4a6a, #2a3a5a);
     border-color: #4a6a9a;
     color: #d0e8ff;
 }
-body.night-mode .paint-clear-btn:hover {
-    background: linear-gradient(to bottom, #4a5a7a, #3a4a6a);
-}
-
-/* Мобильный размер кнопки */
-@media (max-width: 768px) {
-    .day-night-btn {
-        width: 38px;
-        height: 38px;
-        font-size: 17px;
-        top: 12px;
-        right: 12px;
-    }
-}
+body.night-mode .paint-clear-btn:hover { background: linear-gradient(to bottom, #4a5a7a, #3a4a6a); }
 
 /* ============================================
    МОБИЛЬНАЯ АДАПТАЦИЯ
@@ -1689,7 +1514,7 @@ body.night-mode .paint-clear-btn:hover {
     .win7-message { font-size: 14px; }
     .win7-icon { font-size: 30px; width: 38px; height: 38px; }
     .win7-ok { font-size: 14px; padding: 5px 14px; min-width: 60px; }
-    .win7-close { width: 24px; height: 20px; font-size: 12px; }
+    .win7-close { width: 32px; height: 28px; font-size: 15px; }
     .win7-titlebar { height: 28px; }
     .win7-body { padding: 16px 14px 12px; }
     .win7-buttons { padding: 4px 14px 12px; }
@@ -1702,16 +1527,276 @@ body.night-mode .paint-clear-btn:hover {
     .cat-meme { max-width: 140px; max-height: 140px; }
     .cat-meme img { max-width: 140px; max-height: 140px; }
     .ad-banner { font-size: 14px; padding: 8px 14px; }
-    .ad-banner .ad-close {
-        width: 28px; height: 28px; font-size: 16px;
-        top: -12px; right: -12px;
-    }
+    .ad-banner .ad-close { width: 28px; height: 28px; font-size: 16px; top: -12px; right: -12px; }
     .virus-btn { font-size: 13px; padding: 10px 16px; }
     .paint-body { flex-direction: column; align-items: center; }
-    .paint-tools { flex-direction: row; width: auto; }
-    .paint-colors { grid-template-columns: repeat(8, 1fr); }
+    .paint-tools { flex-direction: row; width: auto; flex-wrap: wrap; justify-content: center; gap: 8px; }
+    .paint-colors { grid-template-columns: repeat(6, 1fr) !important; gap: 6px !important; width: 100% !important; }
+    .paint-color-btn { min-width: 26px !important; min-height: 26px !important; aspect-ratio: 1 !important; }
     #paintCanvas { width: 90vw; height: auto; }
     .funny-bsod-smiley { font-size: 56px; }
     .funny-bsod-text { font-size: 16px; }
     .funny-bsod-content { padding: 20px; }
+    .day-night-btn { width: 34px; height: 34px; font-size: 15px; }
+}
+
+
+/* ============================================
+   КНОПКА НАСТРОЕК
+   ============================================ */
+/* Уже стилизована через .day-night-btn — наследует всё */
+
+/* ============================================
+   МОДАЛЬНОЕ ОКНО НАСТРОЕК
+   ============================================ */
+.settings-modal {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    backdrop-filter: blur(3px);
+}
+.settings-modal.active { display: flex; }
+
+.settings-window {
+    background: #e8f2fb;
+    border: 2px solid #5a8fc9;
+    border-radius: 6px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+    width: 400px;
+    max-width: 90vw;
+    animation: settingsAppear 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes settingsAppear {
+    from { transform: scale(0.85); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+}
+
+.settings-titlebar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 34px;
+    padding: 0 8px 0 14px;
+    background: linear-gradient(to bottom, #c9e2f7 0%, #a4c8ea 45%, #8ab8e0 50%, #a8cdec 100%);
+    border-bottom: 1px solid #5a8fc9;
+    font-family: 'HomeVideo', sans-serif;
+    color: #1a3a5c;
+    font-size: 15px;
+    position: relative;
+}
+.settings-titlebar::before {
+    content: '';
+    position: absolute;
+    top: 1px; left: 3px; right: 3px;
+    height: 40%;
+    background: linear-gradient(to bottom, rgba(255,255,255,0.6), transparent);
+    border-radius: 4px 4px 50% 50%;
+    pointer-events: none;
+}
+.settings-close {
+    width: 26px; height: 22px;
+    border: 1px solid #b54040;
+    border-radius: 4px;
+    background: linear-gradient(to bottom, #f0a0a0 0%, #e07070 45%, #c94242 50%, #e05050 100%);
+    color: #fff;
+    font-weight: bold;
+    cursor: pointer;
+    font-family: 'HomeVideo', sans-serif;
+    z-index: 2;
+}
+.settings-close:hover { background: linear-gradient(to bottom, #ffb0b0, #e04a4a); }
+.settings-close:active { transform: scale(0.9); }
+
+.settings-body {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    background: linear-gradient(to bottom, #f7fbff 0%, #eaf2fa 100%);
+}
+
+.settings-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.settings-label {
+    font-family: 'HomeVideo', sans-serif;
+    font-size: 15px;
+    color: #1a3a5c;
+    font-weight: 400;
+    letter-spacing: 0.3px;
+}
+
+/* Слайдер громкости */
+.settings-slider-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.settings-slider {
+    flex: 1;
+    height: 6px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: linear-gradient(to right, #5a8fc9, #c8ddec);
+    border-radius: 3px;
+    outline: none;
+    cursor: pointer;
+}
+.settings-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: linear-gradient(to bottom, #ffffff, #dceaf6);
+    border: 2px solid #5a8fc9;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+.settings-slider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: linear-gradient(to bottom, #ffffff, #dceaf6);
+    border: 2px solid #5a8fc9;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+.settings-value {
+    font-family: 'HomeVideo', sans-serif;
+    font-size: 14px;
+    color: #1a3a5c;
+    min-width: 45px;
+    text-align: right;
+}
+
+/* Выбор курсора */
+.settings-options {
+    display: flex;
+    gap: 10px;
+}
+.settings-option {
+    flex: 1;
+    padding: 12px;
+    border: 2px solid #6a9fd4;
+    border-radius: 6px;
+    background: linear-gradient(to bottom, #f5faff 0%, #dceaf6 100%);
+    color: #1a3a5c;
+    font-family: 'HomeVideo', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+    text-align: center;
+}
+.settings-option:hover {
+    background: linear-gradient(to bottom, #ffffff 0%, #e6f2fb 100%);
+    transform: translateY(-2px);
+}
+.settings-option.active {
+    background: linear-gradient(to bottom, #a4c8ea 0%, #78a8d4 100%);
+    color: #fff;
+    border-color: #4a7fb4;
+    text-shadow: 0 1px 1px rgba(0,0,0,0.3);
+}
+.settings-option-icon {
+    font-size: 22px;
+    line-height: 1;
+}
+
+/* Тёмная тема для настроек */
+body.night-mode .settings-window {
+    background: #1a2a45;
+    border-color: #3a4a6a;
+}
+body.night-mode .settings-titlebar {
+    background: linear-gradient(to bottom, #2a3a5a 0%, #1f2e4a 50%, #152438 100%);
+    border-bottom-color: #3a4a6a;
+    color: #d0e8ff;
+}
+body.night-mode .settings-body {
+    background: linear-gradient(to bottom, #1e2e4e 0%, #172a45 100%);
+}
+body.night-mode .settings-label {
+    color: #d0e8ff;
+}
+body.night-mode .settings-value {
+    color: #d0e8ff;
+}
+body.night-mode .settings-slider {
+    background: linear-gradient(to right, #4a6a9a, #2a3a5a);
+}
+body.night-mode .settings-slider::-webkit-slider-thumb {
+    background: linear-gradient(to bottom, #d0e8ff, #8ab8e0);
+    border-color: #4a6a9a;
+}
+body.night-mode .settings-option {
+    background: linear-gradient(to bottom, #2a3a5a 0%, #1f2e4a 100%);
+    border-color: #4a6a9a;
+    color: #d0e8ff;
+}
+body.night-mode .settings-option:hover {
+    background: linear-gradient(to bottom, #3a4a6a 0%, #2a3a5a 100%);
+}
+body.night-mode .settings-option.active {
+    background: linear-gradient(to bottom, #5a7aaa 0%, #4a6a9a 100%);
+    color: #ffffff;
+    border-color: #6a8aba;
+}
+
+/* ============================================
+   КНОПКА НАСТРОЕК — В СТИЛЕ ИГРОВЫХ КНОПОК
+   ============================================ */
+#settingsToggle {
+    background: linear-gradient(to bottom, #f5faff 0%, #dceaf6 45%, #c8ddec 50%, #e6f2fb 100%);
+    border: 2px solid #6a9fd4;
+    color: #1a3a5c;
+    box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9),
+        inset 0 -1px 0 rgba(12, 113, 198, 0.15);
+}
+
+#settingsToggle:hover {
+    background: linear-gradient(to bottom, #ffffff 0%, #e0effc 45%, #d0e5f5 50%, #eaf4fc 100%);
+    transform: scale(1.1);
+}
+
+#settingsToggle:active {
+    transform: scale(0.95);
+    box-shadow: 
+        0 1px 1px rgba(0, 0, 0, 0.15),
+        inset 0 2px 4px rgba(12, 113, 198, 0.2);
+}
+
+/* Тёмная тема — тоже серая */
+body.night-mode #settingsToggle {
+    background: linear-gradient(to bottom, #2a3a5a 0%, #1a2a4a 45%, #0f1e3a 50%, #1e2e4e 100%);
+    border-color: #4a6a9a;
+    color: #d0e8ff;
+    box-shadow: 
+        0 1px 2px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(150, 200, 255, 0.3),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+}
+
+body.night-mode #settingsToggle:hover {
+    background: linear-gradient(to bottom, #3a4a6a 0%, #2a3a5a 45%, #1f2e4e 50%, #2e3e5e 100%);
+}
+
+body.night-mode #settingsToggle:active {
+    box-shadow: 
+        0 1px 1px rgba(0, 0, 0, 0.4),
+        inset 0 2px 4px rgba(0, 0, 0, 0.3);
 }
