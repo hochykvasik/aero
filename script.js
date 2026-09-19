@@ -143,6 +143,25 @@ function startMusicOnce() {
 // ============================================
 const isMobile = window.innerWidth < 768 || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
+// ===== СЕРДЦА =====
+let heartsEnabled = true;
+let heartsCount = 0;
+let heartCheckCounter = 0;
+let heartsUIVisible = false;
+
+// ===== БАБОЧКА =====
+let butterflyEnabled = false;
+let butterflyActive = false;
+let butterfly = null;
+let butterflyEl = null;
+let butterflyNextThreshold = 250 + Math.floor(Math.random() * 51);
+let butterflySpawnedOnce = false;
+let butterflyLastSpawn = 0;
+let butterflyCheckCounter = 0;
+
+// ===== СЕКРЕТНОЕ МЕНЮ ПЕЙНТА =====
+let paintOpened = false;
+
 // ============================================
 //  ПЕРЕКЛЮЧАТЕЛЬ ИГР
 // ============================================
@@ -169,15 +188,23 @@ function switchMode(mode) {
     windowsGame.classList.toggle('active', mode === 'windows');
     browserGame.classList.toggle('active', mode === 'browser');
     
+    if (butterflyEl) {
+        butterflyEl.style.display = (mode === 'browser') ? 'block' : 'none';
+    }
+    
     if (mode === 'windows') {
         clearAllWindows();
         setTimeout(spawnWindows, 300);
         startXpBackgroundMotion();
         initBgBubbles();
-    } else {
+      } else {
         clearAllWindows();
         stopXpBackgroundMotion();
         if (isRaining) stopRain();
+        // Останавливаем Track1, если играет
+        if (track1InProgress) {
+            stopDancingWindows();
+        }
     }
     
     if (mode === 'browser') {
@@ -395,7 +422,7 @@ class Bubble {
         ctx.lineWidth = Math.max(1, this.radius * 0.025);
         ctx.stroke();
         
-        // Лёд — плавно через iceVisualIntensity
+        // Лёд
         if (iceVisualIntensity > 0.01) {
             const iceGradient = ctx.createRadialGradient(
                 this.x - this.radius * 0.3, this.y - this.radius * 0.3, 0,
@@ -410,7 +437,6 @@ class Bubble {
             ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
             ctx.fill();
             
-            // Трещины
             ctx.save();
             ctx.globalAlpha = 0.7 * iceVisualIntensity;
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
@@ -464,7 +490,6 @@ class Bubble {
             }
             ctx.restore();
             
-            // Блики льда
             const bigIceHx = this.x - this.radius * 0.35;
             const bigIceHy = this.y - this.radius * 0.4;
             const bigIceGrad = ctx.createRadialGradient(bigIceHx, bigIceHy, 0, bigIceHx, bigIceHy, this.radius * 0.4);
@@ -504,14 +529,12 @@ class Bubble {
             ctx.stroke();
         }
         
-        // Тонкий контур
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.55)';
         ctx.lineWidth = 1;
         ctx.stroke();
         
-        // Блики
         const bigSoftHx = this.x + Math.cos(this.highlightAngle * 0.6) * this.radius * 0.3;
         const bigSoftHy = this.y + Math.sin(this.highlightAngle * 0.6) * this.radius * 0.3;
         const bigSoftGradient = ctx.createRadialGradient(bigSoftHx, bigSoftHy, 0, bigSoftHx, bigSoftHy, this.radius * 0.55);
@@ -656,7 +679,7 @@ class WaterWave {
         this.decay = Math.random() * 0.01 + 0.008;
         this.color = Math.random() > 0.5 ? 'rgba(255,255,255,0.7)' : 'rgba(180,240,255,0.7)';
     }
-    update() {
+        update() {
         this.radius += (this.maxRadius - this.radius) * 0.05;
         this.life -= this.decay;
     }
@@ -916,8 +939,7 @@ function startXpBackgroundMotion() {
         const ny = Math.max(-0.8, Math.min(0.8, (clientY / window.innerHeight - 0.5) * 2));
         targetX = nx;
         targetY = ny;
-         // След курсора
-    spawnCursorTrail(clientX, clientY);
+        spawnCursorTrail(clientX, clientY);
     };
     
     window.addEventListener('mousemove', xpMotionHandler);
@@ -1051,12 +1073,10 @@ class BgBubble {
     constructor() {
         this.x = Math.random() * window.innerWidth;
         this.y = Math.random() * window.innerHeight;
-        // Было: radius * 8 + 5 (5-13px). Стало: 12-28px — крупнее в 2 раза
         this.radius = Math.random() * 16 + 12;
         this.vx = (Math.random() - 0.5) * 0.5;
         this.vy = (Math.random() - 0.5) * 0.5;
         this.wobble = Math.random() * Math.PI * 2;
-        // Более прозрачные цвета (альфа 0.25-0.4)
         this.hue = 180 + Math.random() * 40;
         this.color = `hsla(${this.hue}, 80%, 75%, 0.3)`;
         this.highlightColor = `hsla(${this.hue}, 90%, 90%, 0.7)`;
@@ -1072,8 +1092,6 @@ class BgBubble {
     }
     draw() {
         if (!bubblesCtx) return;
-        
-        // 1. Внутреннее заполнение — почти прозрачное
         const innerGradient = bubblesCtx.createRadialGradient(
             this.x, this.y, this.radius * 0.2,
             this.x, this.y, this.radius
@@ -1087,27 +1105,21 @@ class BgBubble {
         bubblesCtx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         bubblesCtx.fill();
         
-        // 2. Тонкая светлая обводка
         bubblesCtx.beginPath();
         bubblesCtx.strokeStyle = `hsla(${this.hue}, 90%, 90%, 0.6)`;
         bubblesCtx.lineWidth = 1.5;
         bubblesCtx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         bubblesCtx.stroke();
         
-        // 3. Радужный оттенок по краю
         bubblesCtx.beginPath();
         bubblesCtx.strokeStyle = `hsla(${this.hue + 40}, 80%, 80%, 0.3)`;
         bubblesCtx.lineWidth = 1;
         bubblesCtx.arc(this.x, this.y, this.radius * 0.95, 0, Math.PI * 2);
         bubblesCtx.stroke();
         
-        // 4. Большой мягкий блик сверху слева
         const hlX = this.x - this.radius * 0.35;
         const hlY = this.y - this.radius * 0.4;
-        const hlGrad = bubblesCtx.createRadialGradient(
-            hlX, hlY, 0,
-            hlX, hlY, this.radius * 0.4
-        );
+        const hlGrad = bubblesCtx.createRadialGradient(hlX, hlY, 0, hlX, hlY, this.radius * 0.4);
         hlGrad.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
         hlGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.4)');
         hlGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
@@ -1116,15 +1128,9 @@ class BgBubble {
         bubblesCtx.arc(hlX, hlY, this.radius * 0.4, 0, Math.PI * 2);
         bubblesCtx.fill();
         
-        // 5. Маленький яркий блик
         bubblesCtx.beginPath();
         bubblesCtx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-        bubblesCtx.arc(
-            this.x + this.radius * 0.25,
-            this.y + this.radius * 0.3,
-            Math.max(2, this.radius * 0.08),
-            0, Math.PI * 2
-        );
+        bubblesCtx.arc(this.x + this.radius * 0.25, this.y + this.radius * 0.3, Math.max(2, this.radius * 0.08), 0, Math.PI * 2);
         bubblesCtx.fill();
     }
 }
@@ -1209,7 +1215,7 @@ function restartSpawnTimer() {
     if (windowSpawnTimer) clearInterval(windowSpawnTimer);
     const interval = isMobile ? 1800 : 1200;
     windowSpawnTimer = setInterval(() => {
-        if (currentMode === 'windows' && openWindows.length < MAX_WINDOWS) {
+        if (currentMode === 'windows' && !track1InProgress && openWindows.length < MAX_WINDOWS) {
             createWindow();
         }
     }, interval);
@@ -1242,8 +1248,14 @@ function createWindow() {
         <div class="win7-buttons"><button class="win7-ok">OK</button></div>
     `;
     makeDraggable(win);
-    win.querySelector('.win7-ok').addEventListener('click', () => closeWindow(win));
-    win.querySelector('.win7-close').addEventListener('click', () => closeWindow(win));
+    const okBtn = win.querySelector('.win7-ok');
+    okBtn.addEventListener('click', (e) => { e.stopPropagation(); closeWindow(win); });
+    okBtn.addEventListener('touchstart', (e) => { e.stopPropagation(); e.preventDefault(); closeWindow(win); }, { passive: false });
+    
+    const closeBtn = win.querySelector('.win7-close');
+    closeBtn.addEventListener('click', (e) => { e.stopPropagation(); closeWindow(win); });
+    closeBtn.addEventListener('touchstart', (e) => { e.stopPropagation(); e.preventDefault(); closeWindow(win); }, { passive: false });
+    
     windowsContainer.appendChild(win);
     openWindows.push(win);
 }
@@ -1275,9 +1287,12 @@ function createCatWindow() {
     makeDraggable(win);
     playCatSound();
     win.querySelectorAll('.win7-ok').forEach(btn => {
-        btn.addEventListener('click', () => closeWindow(win));
+        btn.addEventListener('click', (e) => { e.stopPropagation(); closeWindow(win); });
+        btn.addEventListener('touchstart', (e) => { e.stopPropagation(); e.preventDefault(); closeWindow(win); }, { passive: false });
     });
-    win.querySelector('.win7-close').addEventListener('click', () => closeWindow(win));
+    const closeBtn = win.querySelector('.win7-close');
+    closeBtn.addEventListener('click', (e) => { e.stopPropagation(); closeWindow(win); });
+    closeBtn.addEventListener('touchstart', (e) => { e.stopPropagation(); e.preventDefault(); closeWindow(win); }, { passive: false });
     windowsContainer.appendChild(win);
     openWindows.push(win);
 }
@@ -1327,6 +1342,7 @@ function closeWindow(win) {
     if (win.classList.contains('closing')) return;
     playClickSound();
     updateScoreWindows(1);
+    checkTrack1Trigger();
     win.classList.add('closing');
     setTimeout(() => {
         if (win.parentNode) win.parentNode.removeChild(win);
@@ -1382,6 +1398,283 @@ function spawnWindows() {
 }
 
 // ============================================
+//  TRACK1 — МУЗЫКАЛЬНОЕ СОБЫТИЕ
+// ============================================
+
+function checkTrack1Trigger() {
+    if (track1InProgress) return;
+    
+    // ===== ФАЗА 1: 250-350 окон, максимум 2 уведомления =====
+    if (track1NotificationsShown < 2 && scoreWindows >= track1NextThreshold) {
+        track1NotificationsShown++;
+        // Настраиваем следующий порог (если ещё будет 2-е уведомление)
+        if (track1NotificationsShown < 2) {
+            track1NextThreshold = scoreWindows + 30 + Math.floor(Math.random() * 40);
+            if (track1NextThreshold > 350) {
+                track1NextThreshold = 350;
+            }
+        }
+        showTrack1Notification();
+        return;
+    }
+    
+    // ===== ФАЗА 2: после 350 окон, 5% раз в 50 окон =====
+    if (scoreWindows >= 350 && scoreWindows % 50 === 0 && scoreWindows !== track1LastPhase2Check) {
+        track1LastPhase2Check = scoreWindows;
+        if (Math.random() < 0.05) {
+            showTrack1Notification();
+        }
+    }
+}
+
+function showTrack1Notification() {
+    const win = document.createElement('div');
+    win.className = 'win7-window';
+    win.style.cssText = `
+        position: fixed;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 99998;
+    `;
+    win.innerHTML = `
+        <div class="win7-titlebar">
+            <span class="win7-title">Windows Media Player</span>
+            <button class="win7-close">✕</button>
+        </div>
+        <div class="win7-body">
+            <div class="win7-icon" style="font-size: 36px;">♫</div>
+            <div class="win7-message">
+                Windows предлагает вам<br>включить track1
+            </div>
+        </div>
+        <div class="win7-buttons">
+            <button class="win7-ok">OK</button>
+            <button class="win7-cancel">Cancel</button>
+        </div>
+    `;
+    document.body.appendChild(win);
+    
+    const closeWin = () => {
+        win.style.transition = 'opacity 0.3s';
+        win.style.opacity = '0';
+        setTimeout(() => win.remove(), 300);
+    };
+    
+    // OK — запускаем событие
+    win.querySelector('.win7-ok').addEventListener('click', () => {
+        playClickSound();
+        closeWin();
+        setTimeout(() => startDancingWindows(), 300);
+    });
+    
+    // Cancel — ничего не делаем
+    win.querySelector('.win7-cancel').addEventListener('click', () => {
+        playClickSound();
+        closeWin();
+    });
+    
+    // X — как Cancel
+    win.querySelector('.win7-close').addEventListener('click', () => {
+        closeWin();
+    });
+}
+
+function startDancingWindows() {
+    if (track1InProgress) return;
+    track1InProgress = true;
+    
+    // Закрываем все обычные окна
+    clearAllWindows();
+    
+    // Запускаем музыку
+    const track1Sound = document.getElementById('track1Sound');
+    if (track1Sound) {
+        track1Sound.currentTime = 0;
+        track1Sound.play().catch(() => {});
+    }
+    
+    // Спавним окна: 8 на ПК, 4 на мобильном
+    const count = isMobile ? 4 : 8;
+    for (let i = 0; i < count; i++) {
+        spawnDancingWindow();
+    }
+}
+
+function spawnDancingWindow() {
+    if (dancingWindows.length >= MAX_DANCING_WINDOWS) return;
+    if (!track1InProgress) return;
+    
+    const win = document.createElement('div');
+    win.className = 'win7-window dancing-window';
+    
+    const width = isMobile ? 150 : 170;
+    const height = isMobile ? 120 : 135;
+    
+    const maxX = window.innerWidth - width;
+    const maxY = window.innerHeight - height;
+    const x = Math.max(10, Math.random() * maxX);
+    const y = Math.max(10, Math.random() * maxY);
+    
+    win.style.left = x + 'px';
+    win.style.top = y + 'px';
+    win.style.width = width + 'px';
+    win.style.zIndex = 500 + dancingWindows.length;
+    
+    win.innerHTML = `
+        <div class="win7-titlebar">
+            <span class="win7-title">♫ track1</span>
+            <button class="win7-close dancing-close">✕</button>
+        </div>
+        <div class="win7-body dancing-body">
+            <div class="dancing-icon">♫</div>
+            <div class="sound-bars">
+                <span></span><span></span><span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="win7-buttons">
+            <button class="win7-ok dancing-ok">OK</button>
+        </div>
+    `;
+    
+    const dWindow = {
+        el: win,
+        x: x,
+        y: y,
+        vx: (Math.random() - 0.5) * 1.5,
+        vy: (Math.random() - 0.5) * 1.5,
+        width: width,
+        height: height,
+        changeDirTimer: 20 + Math.floor(Math.random() * 30)
+    };
+    
+    // OK — закрывает окно (проверяем, все ли закрыты)
+    win.querySelector('.dancing-ok').addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeDancingWindow(dWindow);
+    });
+    
+    // X — спавнит ещё одно окно, а это остаётся
+    win.querySelector('.dancing-close').addEventListener('click', (e) => {
+        e.stopPropagation();
+        playClickSound();
+        spawnDancingWindow();
+    });
+    
+    windowsContainer.appendChild(win);
+    dancingWindows.push(dWindow);
+}
+
+function closeDancingWindow(dWindow) {
+    playClickSound();
+    
+    if (dWindow.el && dWindow.el.parentNode) {
+        dWindow.el.classList.add('closing');
+        setTimeout(() => {
+            if (dWindow.el && dWindow.el.parentNode) dWindow.el.remove();
+        }, 600);
+    }
+    
+    const idx = dancingWindows.indexOf(dWindow);
+    if (idx !== -1) dancingWindows.splice(idx, 1);
+    
+    // Если все закрыты — останавливаем
+    if (dancingWindows.length === 0) {
+        stopDancingWindows();
+    }
+}
+
+function stopDancingWindows() {
+    track1InProgress = false;
+    
+    // Убираем оставшиеся окна (на всякий случай)
+    dancingWindows.forEach(dw => {
+        if (dw.el && dw.el.parentNode) dw.el.remove();
+    });
+    dancingWindows = [];
+    
+    // Останавливаем музыку
+    const track1Sound = document.getElementById('track1Sound');
+    if (track1Sound) {
+        track1Sound.pause();
+        track1Sound.currentTime = 0;
+    }
+    
+    // Возобновляем обычную игру
+    if (currentMode === 'windows') {
+        spawnWindows();
+    }
+}
+
+function updateDancingWindows() {
+    if (!track1InProgress) return;
+    
+    for (let i = dancingWindows.length - 1; i >= 0; i--) {
+        const dw = dancingWindows[i];
+        if (!dw.el || !dw.el.parentNode) {
+            dancingWindows.splice(i, 1);
+            continue;
+        }
+        
+        // === Хаотичное движение ===
+        dw.changeDirTimer--;
+        if (dw.changeDirTimer <= 0) {
+            dw.vx += (Math.random() - 0.5) * 0.6;
+            dw.vy += (Math.random() - 0.5) * 0.6;
+            dw.changeDirTimer = 20 + Math.floor(Math.random() * 30);
+        }
+        
+        // === Убегание от курсора/пальца ===
+        const cx = pointer.x;
+        const cy = pointer.y;
+        if (cx > 0 && cy > 0) {
+            const centerX = dw.x + dw.width / 2;
+            const centerY = dw.y + dw.height / 2;
+            const ddx = centerX - cx;
+            const ddy = centerY - cy;
+            const dist = Math.sqrt(ddx * ddx + ddy * ddy);
+            if (dist < 180 && dist > 0) {
+                const force = (180 - dist) / 180;
+                dw.vx += (ddx / dist) * force * 0.6;
+                dw.vy += (ddy / dist) * force * 0.6;
+            }
+        }
+        
+        // === Ограничение скорости ===
+        const speed = Math.sqrt(dw.vx * dw.vx + dw.vy * dw.vy);
+        const maxSpeed = 3;
+        if (speed > maxSpeed) {
+            dw.vx = (dw.vx / speed) * maxSpeed;
+            dw.vy = (dw.vy / speed) * maxSpeed;
+        }
+        
+        // === Трение ===
+        dw.vx *= 0.99;
+        dw.vy *= 0.99;
+        
+        // === Двигаем ===
+        dw.x += dw.vx;
+        dw.y += dw.vy;
+        
+        // === Отскок от стен ===
+        if (dw.x < 0) { dw.x = 0; dw.vx = Math.abs(dw.vx); }
+        if (dw.x > window.innerWidth - dw.width) {
+            dw.x = window.innerWidth - dw.width;
+            dw.vx = -Math.abs(dw.vx);
+        }
+        if (dw.y < 0) { dw.y = 0; dw.vy = Math.abs(dw.vy); }
+        if (dw.y > window.innerHeight - dw.height) {
+            dw.y = window.innerHeight - dw.height;
+            dw.vy = -Math.abs(dw.vy);
+        }
+        
+        // === Применяем к DOM ===
+        dw.el.style.left = dw.x + 'px';
+        dw.el.style.top = dw.y + 'px';
+    }
+}
+
+
+// ============================================
 //  ИГРА 3: БРАУЗЕР
 // ============================================
 const browserPage = document.getElementById('browserPage');
@@ -1423,6 +1716,7 @@ const MEME_COLORS = [
 
 function createMemeButton() {
     if (browserPaused || !browserRunning) return;
+    if (browserPage.querySelectorAll('.meme-btn').length >= MAX_MEMES) return;
     
     const btn = document.createElement('button');
     btn.className = 'meme-btn';
@@ -1448,7 +1742,9 @@ function createMemeButton() {
         memeScoreEl.textContent = memeScore;
         memeCatchTimestamps.push(Date.now());
         checkSecretUnlock();
-        setTimeout(() => btn.remove(), 400);
+        checkHeartDrop();
+        checkButterflySpawn();
+      btn.addEventListener('animationend', () => btn.remove(), { once: true });
     });
     
     browserPage.appendChild(btn);
@@ -1463,6 +1759,7 @@ function createMemeButton() {
 
 function createCatMeme() {
     if (browserPaused || !browserRunning) return;
+    if (browserPage.querySelectorAll('.cat-meme').length >= MAX_CATS) return;
     
     const catIndex = Math.floor(Math.random() * 10) + 1;
     const div = document.createElement('div');
@@ -1503,7 +1800,9 @@ function createCatMeme() {
         memeScoreEl.textContent = memeScore;
         memeCatchTimestamps.push(Date.now());
         checkSecretUnlock();
-        setTimeout(() => div.remove(), 400);
+        checkHeartDrop();
+        checkButterflySpawn();
+     div.addEventListener('animationend', () => div.remove(), { once: true });
     });
     
     setTimeout(() => {
@@ -1516,6 +1815,7 @@ function createCatMeme() {
 
 function createAd() {
     if (browserPaused || !browserRunning) return;
+    if (browserPage.querySelectorAll('.ad-banner').length >= MAX_ADS) return;
     
     const ad = document.createElement('div');
     ad.className = 'ad-banner';
@@ -1557,6 +1857,14 @@ function createAd() {
     ad.style.top = Math.max(10, Math.random() * maxY) + 'px';
     
     browserPage.appendChild(ad);
+    
+    // АВТОУДАЛЕНИЕ через 10 секунд, если не закрыли
+    setTimeout(() => {
+        if (ad.parentNode) {
+            ad.classList.add('expiring');
+            setTimeout(() => ad.remove(), 500);
+        }
+    }, 10000);
 }
 
 const VIRUS_VARIANTS = [
@@ -1594,6 +1902,7 @@ const VIRUS_VARIANTS = [
 
 function createVirusButton() {
     if (browserPaused || !browserRunning) return;
+    if (browserPage.querySelectorAll('.virus-btn').length >= MAX_VIRUSES) return;
     
     const variant = VIRUS_VARIANTS[Math.floor(Math.random() * VIRUS_VARIANTS.length)];
     
@@ -1641,6 +1950,24 @@ function showPaintNotification() {
 let secretUnlocked = false;
 let adSpawnTimer = null;
 let virusSpawnTimer = null;
+let memeSpawnTimer = null;
+let browserCleanupTimer = null;
+
+// ===== ЖЁСТКИЕ ЛИМИТЫ НА ЭЛЕМЕНТЫ В БРАУЗЕРЕ =====
+const MAX_MEMES = 12;
+const MAX_CATS = 4;
+const MAX_ADS = 6;
+const MAX_VIRUSES = 3;
+const MAX_TOTAL_ELEMENTS = 20;
+
+// ===== TRACK1 (МУЗЫКАЛЬНОЕ СОБЫТИЕ В «ОКНАХ») =====
+let track1NotificationsShown = 0;
+let track1NextThreshold = 250 + Math.floor(Math.random() * 101); // 250-350
+let track1InProgress = false;
+let track1LastPhase2Check = 0;
+let dancingWindows = [];
+const MAX_DANCING_WINDOWS = isMobile ? 8 : 12;
+
 
 function startBrowserGame() {
     if (browserRunning) return;
@@ -1662,7 +1989,7 @@ function startBrowserGame() {
             if (Math.random() < 0.25) createCatMeme();
             else createMemeButton();
         }
-        setTimeout(scheduleMemeSpawn, getMemeSpawnInterval());
+        memeSpawnTimer = setTimeout(scheduleMemeSpawn, getMemeSpawnInterval());
     }
     scheduleMemeSpawn();
     
@@ -1683,6 +2010,23 @@ function startBrowserGame() {
             else createMemeButton();
         }, i * 400);
     }
+    
+    // ===== ПРЕДОХРАНИТЕЛЬ: чистка лишних элементов =====
+    if (browserCleanupTimer) clearInterval(browserCleanupTimer);
+    browserCleanupTimer = setInterval(() => {
+        if (!browserRunning) {
+            clearInterval(browserCleanupTimer);
+            browserCleanupTimer = null;
+            return;
+        }
+        const all = browserPage.querySelectorAll('.meme-btn, .cat-meme, .ad-banner, .virus-btn');
+        if (all.length > MAX_TOTAL_ELEMENTS) {
+            const excess = all.length - MAX_TOTAL_ELEMENTS;
+            for (let i = 0; i < excess; i++) {
+                if (all[i] && all[i].parentNode) all[i].remove();
+            }
+        }
+    }, 2000);
 }
 
 function stopBrowserGame(forceReset = false) {
@@ -1690,8 +2034,12 @@ function stopBrowserGame(forceReset = false) {
     browserPaused = false;
     if (adSpawnTimer) clearInterval(adSpawnTimer);
     if (virusSpawnTimer) clearInterval(virusSpawnTimer);
+    if (memeSpawnTimer) clearTimeout(memeSpawnTimer);
+    if (browserCleanupTimer) clearInterval(browserCleanupTimer);
     adSpawnTimer = null;
     virusSpawnTimer = null;
+    memeSpawnTimer = null;
+    browserCleanupTimer = null;
     
     if (forceReset) {
         browserPage.innerHTML = '';
@@ -1700,12 +2048,47 @@ function stopBrowserGame(forceReset = false) {
         secretUnlocked = false;
         paintTabBtn.style.display = 'none';
         memeCatchTimestamps.length = 0;
+        
+        // Сброс сердец
+        heartsCount = 0;
+        heartsEnabled = true;
+        heartsUIVisible = false;
+        updateHeartsUI();
+        updateHeartButton(true);
+        localStorage.setItem('heartsCount', 0);
+        localStorage.setItem('heartsEnabled', 'true');
+        heartCheckCounter = 0;
+        
+        // Сброс бабочки
+        if (butterfly) {
+            butterfly.remove();
+        }
+        butterflySpawnedOnce = false;
+        butterflyEnabled = false;
+        butterflyActive = false;
+        butterflyLastSpawn = 0;
+        butterflyCheckCounter = 0;
+        localStorage.removeItem('butterflySpawnedOnce');
+        localStorage.removeItem('butterflyEnabled');
+        localStorage.removeItem('butterflyActive');
+        updateButterflyButtonUI();
+        
+        // Сброс Пейнта
+        paintOpened = false;
+        localStorage.removeItem('paintOpened');
     }
     
     document.getElementById('bsod').classList.remove('active');
 }
 
 function showBSOD() {
+    if (heartsEnabled && heartsCount > 0) {
+        if (useHeart()) {
+            playSimpleSound(virusLoseSound);
+            return;
+        }
+    }
+    
     const bsod = document.getElementById('bsod');
     const progress = document.getElementById('bsodProgress');
     bsod.classList.add('active');
@@ -1717,12 +2100,6 @@ function showBSOD() {
         bsod.classList.remove('active');
         browserPaused = false;
         stopBrowserGame(true);
-        
-        memeScore = 0;
-        memeScoreEl.textContent = '0';
-        secretUnlocked = false;
-        paintTabBtn.style.display = 'none';
-        memeCatchTimestamps.length = 0;
         
         if (currentMode === 'browser') {
             startBrowserGame();
@@ -1842,6 +2219,13 @@ paintTabBtn.addEventListener('click', () => {
     browserPaused = true;
     paintCtx.fillStyle = '#ffffff';
     paintCtx.fillRect(0, 0, paintCanvas.width, paintCanvas.height);
+    
+    if (!paintOpened) {
+        paintOpened = true;
+        heartsUIVisible = true;
+        localStorage.setItem('paintOpened', 'true');
+        updateHeartsUI();
+    }
 });
 
 document.getElementById('paintClose').addEventListener('click', () => {
@@ -1879,93 +2263,415 @@ if (dayNightBtn) {
 }
 
 // ============================================
-//  ГЛАВНЫЙ ЦИКЛ
+//  БАБОЧКА — DOM-ПИТОМЕЦ
+// ============================================
+class Butterfly {
+    constructor() {
+        this.x = window.innerWidth / 2;
+        this.y = window.innerHeight / 2;
+        this.vx = (Math.random() - 0.5) * 1.5;
+        this.vy = (Math.random() - 0.5) * 1.5;
+        this.targetX = this.x;
+        this.targetY = this.y;
+        this.rotation = 0;
+        this.isDragging = false;
+        this.dragOffsetX = 0;
+        this.dragOffsetY = 0;
+        this.size = 40;
+        this.memeSpawned = memeScore;
+        this.lifetime = 30 + Math.floor(Math.random() * 21);
+        this.wingPhase = 0;
+        this.wasDragged = false;
+
+        this.createDOM();
+    }
+
+    createDOM() {
+        butterflyEl = document.createElement('div');
+        butterflyEl.className = 'butterfly-pet';
+        butterflyEl.style.cssText = `
+            position: fixed;
+            left: ${this.x}px;
+            top: ${this.y}px;
+            width: 80px;
+            height: 80px;
+            transform: translate(-50%, -50%);
+            pointer-events: auto;
+            cursor: grab;
+            z-index: 99999;
+            user-select: none;
+            touch-action: none;
+            filter: drop-shadow(0 0 8px rgba(120, 200, 255, 0.6));
+            display: ${currentMode === 'browser' ? 'block' : 'none'};
+        `;
+        butterflyEl.innerHTML = `
+            <svg viewBox="-50 -50 100 100" width="100%" height="100%">
+                <defs>
+                    <radialGradient id="bwTL" cx="30%" cy="30%" r="70%">
+                        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9"/>
+                        <stop offset="30%" stop-color="#5b9bd5"/>
+                        <stop offset="100%" stop-color="#5b9bd5" stop-opacity="0.5"/>
+                    </radialGradient>
+                    <radialGradient id="bwTR" cx="30%" cy="30%" r="70%">
+                        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9"/>
+                        <stop offset="30%" stop-color="#e74c3c"/>
+                        <stop offset="100%" stop-color="#e74c3c" stop-opacity="0.5"/>
+                    </radialGradient>
+                    <radialGradient id="bwBL" cx="30%" cy="30%" r="70%">
+                        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9"/>
+                        <stop offset="40%" stop-color="#7ac142"/>
+                        <stop offset="100%" stop-color="#7ac142" stop-opacity="0.5"/>
+                    </radialGradient>
+                    <radialGradient id="bwBR" cx="30%" cy="30%" r="70%">
+                        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9"/>
+                        <stop offset="40%" stop-color="#f4d03f"/>
+                        <stop offset="100%" stop-color="#f4d03f" stop-opacity="0.5"/>
+                    </radialGradient>
+                </defs>
+                <path d="M0,0 C-12,-20 -40,-32 -36,-4 C-32,12 -12,8 0,0 Z"
+                      fill="url(#bwTL)" stroke="white" stroke-width="1.5"/>
+                <path d="M0,0 C12,-20 40,-32 36,-4 C32,12 12,8 0,0 Z"
+                      fill="url(#bwTR)" stroke="white" stroke-width="1.5"/>
+                <path d="M0,0 C-8,12 -28,28 -24,36 C-16,36 -4,20 0,0 Z"
+                      fill="url(#bwBL)" stroke="white" stroke-width="1.5"/>
+                <path d="M0,0 C8,12 28,28 24,36 C16,36 4,20 0,0 Z"
+                      fill="url(#bwBR)" stroke="white" stroke-width="1.5"/>
+                <ellipse cx="0" cy="0" rx="4" ry="14" fill="#1a1a1a"/>
+                <circle cx="-3" cy="-13" r="1.5" fill="white"/>
+                <circle cx="3" cy="-13" r="1.5" fill="white"/>
+                <path d="M-2,-14 Q-12,-28 -16,-26" stroke="#1a1a1a" stroke-width="1.5" fill="none"/>
+                <path d="M2,-14 Q12,-28 16,-26" stroke="#1a1a1a" stroke-width="1.5" fill="none"/>
+            </svg>
+        `;
+        document.body.appendChild(butterflyEl);
+
+        const self = this;
+
+        butterflyEl.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            self.isDragging = true;
+            self.wasDragged = false;
+            self.dragOffsetX = self.x - e.clientX;
+            self.dragOffsetY = self.y - e.clientY;
+            butterflyEl.style.cursor = 'grabbing';
+        });
+
+        butterflyEl.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const t = e.touches[0];
+            self.isDragging = true;
+            self.wasDragged = false;
+            self.dragOffsetX = self.x - t.clientX;
+            self.dragOffsetY = self.y - t.clientY;
+        }, { passive: false });
+
+        butterflyEl.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (!self.wasDragged) {
+                const dx = self.x - e.clientX;
+                const dy = self.y - e.clientY;
+                const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+                self.vx = (dx / dist) * 8;
+                self.vy = (dy / dist) * 8;
+                playPopSound(15, 0.3);
+            }
+        });
+    }
+
+    update() {
+        if (!butterflyEl) return;
+
+        if (this.isDragging) {
+            this.render();
+            return;
+        }
+
+        if (Math.random() < 0.02) {
+            this.targetX = window.innerWidth * (0.15 + Math.random() * 0.7);
+            this.targetY = window.innerHeight * (0.15 + Math.random() * 0.6);
+        }
+
+        const dx = this.targetX - this.x;
+        const dy = this.targetY - this.y;
+        this.vx += dx * 0.001;
+        this.vy += dy * 0.001;
+        this.vx *= 0.97;
+        this.vy *= 0.97;
+
+        const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+        const maxSpeed = 2;
+        if (speed > maxSpeed) {
+            this.vx = (this.vx / speed) * maxSpeed;
+            this.vy = (this.vy / speed) * maxSpeed;
+        }
+
+        this.x += this.vx;
+        this.y += this.vy;
+
+        if (this.x < this.size) { this.x = this.size; this.vx = Math.abs(this.vx); }
+        if (this.x > window.innerWidth - this.size) { this.x = window.innerWidth - this.size; this.vx = -Math.abs(this.vx); }
+        if (this.y < this.size) { this.y = this.size; this.vy = Math.abs(this.vy); }
+        if (this.y > window.innerHeight - this.size) { this.y = window.innerHeight - this.size; this.vy = -Math.abs(this.vy); }
+
+        const targetRotation = Math.atan2(this.vy, this.vx) + Math.PI / 2;
+        this.rotation += (targetRotation - this.rotation) * 0.1;
+
+        this.wingPhase += 0.15;
+        this.render();
+
+        if (memeScore - this.memeSpawned > this.lifetime) {
+            this.remove();
+        }
+    }
+
+    render() {
+        if (!butterflyEl) return;
+        const wingFlap = Math.sin(this.wingPhase) * 0.3 + 0.7;
+        butterflyEl.style.left = this.x + 'px';
+        butterflyEl.style.top = this.y + 'px';
+        butterflyEl.style.transform = `translate(-50%, -50%) rotate(${this.rotation}rad) scaleX(${wingFlap})`;
+    }
+
+    remove() {
+        if (butterflyEl) {
+            butterflyEl.remove();
+            butterflyEl = null;
+        }
+        butterfly = null;
+        butterflyActive = false;
+        updateButterflyButtonUI();
+    }
+}
+
+window.addEventListener('mousemove', (e) => {
+    if (butterfly && butterfly.isDragging) {
+        butterfly.x = e.clientX + butterfly.dragOffsetX;
+        butterfly.y = e.clientY + butterfly.dragOffsetY;
+        butterfly.vx = 0;
+        butterfly.vy = 0;
+        butterfly.wasDragged = true;
+        butterfly.render();
+    }
+});
+
+window.addEventListener('mouseup', () => {
+    if (butterfly && butterfly.isDragging) {
+        butterfly.isDragging = false;
+        if (butterflyEl) butterflyEl.style.cursor = 'grab';
+    }
+});
+
+window.addEventListener('touchmove', (e) => {
+    if (butterfly && butterfly.isDragging) {
+        const t = e.touches[0];
+        butterfly.x = t.clientX + butterfly.dragOffsetX;
+        butterfly.y = t.clientY + butterfly.dragOffsetY;
+        butterfly.vx = 0;
+        butterfly.vy = 0;
+        butterfly.wasDragged = true;
+        butterfly.render();
+    }
+}, { passive: true });
+
+window.addEventListener('touchend', () => {
+    if (butterfly && butterfly.isDragging) {
+        butterfly.isDragging = false;
+    }
+});
+
+function spawnButterfly() {
+    if (butterfly) return false;
+    butterfly = new Butterfly();
+    butterflyActive = true;
+    updateButterflyButtonUI();
+    return true;
+}
+
+function checkButterflySpawn() {
+    if (butterfly) return;
+    
+    butterflyCheckCounter++;
+    if (butterflyCheckCounter % 5 !== 0) return;
+    
+    if (!butterflySpawnedOnce) {
+        if (memeScore >= butterflyNextThreshold && Math.random() < 0.40) {
+            butterflySpawnedOnce = true;
+            butterflyEnabled = true;
+            spawnButterfly();
+            showButterflyNotification();
+            localStorage.setItem('butterflySpawnedOnce', 'true');
+            localStorage.setItem('butterflyEnabled', 'true');
+            console.log('🦋 Бабочка появилась впервые!');
+        }
+    } else {
+        if (memeScore - butterflyLastSpawn >= 150 && Math.random() < 0.40) {
+            butterflyLastSpawn = memeScore;
+            spawnButterfly();
+            console.log('🦋 Бабочка вернулась!');
+        }
+    }
+}
+
+function showButterflyNotification() {
+    const wasPaused = browserPaused;
+    browserPaused = true;
+
+    const win = document.createElement('div');
+    win.className = 'win7-window';
+    win.style.cssText = `
+        position: fixed;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 99998;
+    `;
+    win.innerHTML = `
+        <div class="win7-titlebar">
+            <span class="win7-title">Bug found</span>
+            <button class="win7-close">✕</button>
+        </div>
+        <div class="win7-body">
+            <div class="win7-icon" style="font-size: 36px;">ʚїɞ</div>
+            <div class="win7-message">
+                Windows found a bug in your software.<br>
+                It's a butterfly.
+            </div>
+        </div>
+        <div class="win7-buttons">
+            <button class="win7-ok">Ok</button>
+            <button class="win7-ok">Ignore</button>
+        </div>
+    `;
+    document.body.appendChild(win);
+    
+    const closeWin = () => {
+        win.style.transition = 'opacity 0.3s';
+        win.style.opacity = '0';
+        setTimeout(() => {
+            win.remove();
+            browserPaused = wasPaused;
+        }, 300);
+    };
+    win.querySelector('.win7-close').addEventListener('click', closeWin);
+    win.querySelectorAll('.win7-ok').forEach(btn => btn.addEventListener('click', closeWin));
+}
+
+// ============================================
+//  ГЛАВНЫЙ ЦИКЛ (ЗАЩИЩЁННЫЙ)
 // ============================================
 let time = 0;
 
 function animate() {
-    const targetIce = isFrozen ? 1 : 0;
-    iceVisualIntensity += (targetIce - iceVisualIntensity) * 0.05;
-    if (Math.abs(iceVisualIntensity - targetIce) < 0.01) {
-        iceVisualIntensity = targetIce;
-    }
-    
-    if (currentMode === 'bubbles') {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        time += 1;
-        
-        if (pointer.x > 0 && pointer.y > 0 && pointer.prevX > 0 && pointer.prevY > 0) {
-            const speed = Math.sqrt(
-                Math.pow(pointer.x - pointer.prevX, 2) + 
-                Math.pow(pointer.y - pointer.prevY, 2)
-            );
-            const threshold = isMobile ? 1 : 3;
-            if (speed > threshold) {
-                const count = Math.min(Math.floor(speed / threshold) + 1, isMobile ? 4 : 3);
-                for (let i = 0; i < count; i++) {
-                    trailBubbles.push(new TrailBubble(
-                        pointer.x + (Math.random() - 0.5) * 25,
-                        pointer.y + (Math.random() - 0.5) * 25
-                    ));
-                }
-            }
-            const waveChance = isMobile ? 0.3 : 0.15;
-            const waveThreshold = isMobile ? 1 : 5;
-            if (Math.random() < waveChance && speed > waveThreshold && !isFrozen) {
-                waterWaves.push(new WaterWave(pointer.x, pointer.y, true));
-            }
+    try {
+        const targetIce = isFrozen ? 1 : 0;
+        iceVisualIntensity += (targetIce - iceVisualIntensity) * 0.05;
+        if (Math.abs(iceVisualIntensity - targetIce) < 0.01) {
+            iceVisualIntensity = targetIce;
         }
         
-        pointer.prevX = pointer.x;
-        pointer.prevY = pointer.y;
+        if (currentMode === 'bubbles') {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            time += 1;
+            
+            if (pointer.x > 0 && pointer.y > 0 && pointer.prevX > 0 && pointer.prevY > 0) {
+                const speed = Math.sqrt(
+                    Math.pow(pointer.x - pointer.prevX, 2) + 
+                    Math.pow(pointer.y - pointer.prevY, 2)
+                );
+                const threshold = isMobile ? 1 : 3;
+                if (speed > threshold) {
+                    const count = Math.min(Math.floor(speed / threshold) + 1, isMobile ? 4 : 3);
+                    for (let i = 0; i < count; i++) {
+                        trailBubbles.push(new TrailBubble(
+                            pointer.x + (Math.random() - 0.5) * 25,
+                            pointer.y + (Math.random() - 0.5) * 25
+                        ));
+                    }
+                }
+                const waveChance = isMobile ? 0.3 : 0.15;
+                const waveThreshold = isMobile ? 1 : 5;
+                if (Math.random() < waveChance && speed > waveThreshold && !isFrozen) {
+                    waterWaves.push(new WaterWave(pointer.x, pointer.y, true));
+                }
+            }
+            
+            pointer.prevX = pointer.x;
+            pointer.prevY = pointer.y;
 
-        if (!isFrozen) checkBubbleCollisions();
+            if (!isFrozen) checkBubbleCollisions();
 
-        for (let i = waterWaves.length - 1; i >= 0; i--) {
-            const w = waterWaves[i];
-            w.update();
-            w.draw();
+            for (let i = waterWaves.length - 1; i >= 0; i--) {
+                const w = waterWaves[i];
+                w.update();
+                w.draw();
+                particles.forEach(bubble => {
+                    if (bubble.stuckTo) return;
+                    const dx = bubble.x - w.x;
+                    const dy = bubble.y - w.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    const ringWidth = 25;
+                    if (Math.abs(dist - w.radius) < ringWidth && w.life > 0.3) {
+                        const angle = Math.atan2(dy, dx);
+                        const force = w.life * 0.6;
+                        bubble.vx += Math.cos(angle) * force;
+                        bubble.vy += Math.sin(angle) * force;
+                    }
+                });
+                if (w.life <= 0) waterWaves.splice(i, 1);
+            }
+
+            for (let i = trailBubbles.length - 1; i >= 0; i--) {
+                const tb = trailBubbles[i];
+                tb.update();
+                tb.draw();
+                if (tb.life <= 0) trailBubbles.splice(i, 1);
+            }
+            
             particles.forEach(bubble => {
-                if (bubble.stuckTo) return;
-                const dx = bubble.x - w.x;
-                const dy = bubble.y - w.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                const ringWidth = 25;
-                if (Math.abs(dist - w.radius) < ringWidth && w.life > 0.3) {
-                    const angle = Math.atan2(dy, dx);
-                    const force = w.life * 0.6;
-                    bubble.vx += Math.cos(angle) * force;
-                    bubble.vy += Math.sin(angle) * force;
-                }
+                bubble.update();
+                bubble.draw();
             });
-            if (w.life <= 0) waterWaves.splice(i, 1);
-        }
-
-        for (let i = trailBubbles.length - 1; i >= 0; i--) {
-            const tb = trailBubbles[i];
-            tb.update();
-            tb.draw();
-            if (tb.life <= 0) trailBubbles.splice(i, 1);
+            
+            for (let i = popParticles.length - 1; i >= 0; i--) {
+                const p = popParticles[i];
+                p.update();
+                p.draw();
+                if (p.life <= 0) popParticles.splice(i, 1);
+            }
         }
         
-        particles.forEach(bubble => {
-            bubble.update();
-            bubble.draw();
-        });
-        
-        for (let i = popParticles.length - 1; i >= 0; i--) {
-            const p = popParticles[i];
-            p.update();
-            p.draw();
-            if (p.life <= 0) popParticles.splice(i, 1);
+        if (currentMode === 'windows') {
+            updateBgBubbles();
         }
-    }
-    
-    if (currentMode === 'windows') {
-        updateBgBubbles();
+    } catch (e) {
+        console.error('Ошибка анимации:', e);
     }
     
     requestAnimationFrame(animate);
+}
+
+function animateButterfly() {
+    if (butterfly) {
+        try {
+            butterfly.update();
+        } catch (e) {
+            console.error('Ошибка бабочки:', e);
+            if (butterfly) butterfly.remove();
+        }
+    }
+    requestAnimationFrame(animateButterfly);
+}
+
+
+function animateDancingWindowsLoop() {
+    try {
+        updateDancingWindows();
+    } catch (e) {
+        console.error('Ошибка танцующих окон:', e);
+    }
+    requestAnimationFrame(animateDancingWindowsLoop);
 }
 
 // ============================================
@@ -1973,6 +2679,8 @@ function animate() {
 // ============================================
 initBubbles();
 animate();
+animateButterfly();
+animateDancingWindowsLoop();
 
 window.addEventListener('resize', () => {
     resizeCanvas();
@@ -1982,7 +2690,6 @@ window.addEventListener('resize', () => {
 
 popAllBtn.style.display = 'block';
 bubblesScore.style.display = 'block';
-
 
 // ============================================
 //  НАСТРОЙКИ — МОДАЛЬНОЕ ОКНО
@@ -1994,12 +2701,10 @@ const musicVolumeSlider = document.getElementById('musicVolume');
 const musicVolumeValue = document.getElementById('musicVolumeValue');
 const cursorOptions = document.querySelectorAll('.settings-option');
 
-// Открытие/закрытие
 if (settingsToggle && settingsModal) {
     settingsToggle.addEventListener('click', () => {
         playClickSound();
         settingsModal.classList.add('active');
-        // Загружаем сохранённые настройки
         loadSettings();
     });
 }
@@ -2017,7 +2722,6 @@ if (settingsModal) {
     });
 }
 
-// ===== ГРОМКОСТЬ МУЗЫКИ =====
 function updateMusicVolume(value) {
     const vol = value / 100;
     ambientMusic.volume = vol;
@@ -2031,8 +2735,7 @@ if (musicVolumeSlider) {
     });
 }
 
-// ===== ВЫБОР КУРСОРА =====
-let cursorMode = 'waves'; // 'waves' или 'bubbles'
+let cursorMode = 'waves';
 
 function setCursorMode(mode) {
     cursorMode = mode;
@@ -2049,32 +2752,28 @@ cursorOptions.forEach(opt => {
     });
 });
 
-// ===== ЗАГРУЗКА СОХРАНЁННЫХ НАСТРОЕК =====
 function loadSettings() {
-    // Громкость
     const savedVolume = localStorage.getItem('musicVolume');
     if (savedVolume !== null) {
         const vol = parseInt(savedVolume);
         if (musicVolumeSlider) musicVolumeSlider.value = vol;
         updateMusicVolume(vol);
     } else {
-        updateMusicVolume(15); // дефолт — тихо
+        updateMusicVolume(15);
     }
     
-    // Курсор
     const savedCursor = localStorage.getItem('cursorMode');
     if (savedCursor) {
         setCursorMode(savedCursor);
     } else {
-        setCursorMode('waves'); // дефолт — только волны
+        setCursorMode('waves');
     }
 }
 
-// Загружаем при старте
 loadSettings();
 
 // ============================================
-//  СЛЕД КУРСОРА (для «Окон» и «Браузера»)
+//  СЛЕД КУРСОРА (для «Окон» и «Браузера») — С ЛИМИТОМ
 // ============================================
 const cursorTrailContainer = document.createElement('div');
 cursorTrailContainer.id = 'cursorTrail';
@@ -2089,57 +2788,63 @@ cursorTrailContainer.style.cssText = `
 document.body.appendChild(cursorTrailContainer);
 
 let lastTrailTime = 0;
+const MAX_TRAIL_ELEMENTS = 25;
 
 function spawnCursorTrail(x, y) {
-    if (currentMode === 'bubbles') return; // в пузырях свой след
+    if (currentMode === 'bubbles') return;
+    
     const now = Date.now();
-    if (now - lastTrailTime < 30) return; // ограничение частоты
+    if (now - lastTrailTime < 80) return;
     lastTrailTime = now;
     
-    // Волны — всегда
+    if (cursorTrailContainer.children.length >= MAX_TRAIL_ELEMENTS) {
+        const first = cursorTrailContainer.firstChild;
+        if (first) first.remove();
+    }
+    
     const wave = document.createElement('div');
     wave.style.cssText = `
         position: absolute;
         left: ${x}px;
         top: ${y}px;
-        width: 20px;
-        height: 20px;
+        width: 16px;
+        height: 16px;
         border: 2px solid rgba(200, 240, 255, 0.7);
         border-radius: 50%;
         transform: translate(-50%, -50%) scale(0.3);
-        animation: cursorWaveExpand 0.9s ease-out forwards;
+        animation: cursorWaveExpand 0.8s ease-out forwards;
         pointer-events: none;
+        will-change: transform, opacity;
     `;
     cursorTrailContainer.appendChild(wave);
-    setTimeout(() => wave.remove(), 900);
     
-    // Пузырьки — только если выбрано
-    if (cursorMode === 'bubbles') {
-        for (let i = 0; i < 2; i++) {
-            const bubble = document.createElement('div');
-            const size = 4 + Math.random() * 6;
-            const offsetX = (Math.random() - 0.5) * 20;
-            const offsetY = (Math.random() - 0.5) * 20;
-            bubble.style.cssText = `
-                position: absolute;
-                left: ${x + offsetX}px;
-                top: ${y + offsetY}px;
-                width: ${size}px;
-                height: ${size}px;
-                border-radius: 50%;
-                background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9), rgba(200, 240, 255, 0.5), transparent);
-                border: 1px solid rgba(255, 255, 255, 0.7);
-                transform: translate(-50%, -50%);
-                animation: cursorBubbleFloat 1s ease-out forwards;
-                pointer-events: none;
-            `;
-            cursorTrailContainer.appendChild(bubble);
-            setTimeout(() => bubble.remove(), 1000);
-        }
+    wave.addEventListener('animationend', () => wave.remove(), { once: true });
+    
+    if (cursorMode === 'bubbles' && Math.random() < 0.5) {
+        const bubble = document.createElement('div');
+        const size = 4 + Math.random() * 5;
+        const offsetX = (Math.random() - 0.5) * 15;
+        const offsetY = (Math.random() - 0.5) * 15;
+        bubble.style.cssText = `
+            position: absolute;
+            left: ${x + offsetX}px;
+            top: ${y + offsetY}px;
+            width: ${size}px;
+            height: ${size}px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9), rgba(200, 240, 255, 0.5), transparent);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            transform: translate(-50%, -50%);
+            animation: cursorBubbleFloat 0.9s ease-out forwards;
+            pointer-events: none;
+            will-change: transform, opacity;
+        `;
+        cursorTrailContainer.appendChild(bubble);
+        
+        bubble.addEventListener('animationend', () => bubble.remove(), { once: true });
     }
 }
 
-// CSS для анимаций — добавим через JS, чтобы не править style.css
 const cursorStyle = document.createElement('style');
 cursorStyle.textContent = `
     @keyframes cursorWaveExpand {
@@ -2153,8 +2858,6 @@ cursorStyle.textContent = `
 `;
 document.head.appendChild(cursorStyle);
 
-
-// След курсора в браузере
 document.getElementById('browserGame').addEventListener('mousemove', (e) => {
     if (currentMode !== 'browser') return;
     spawnCursorTrail(e.clientX, e.clientY);
@@ -2164,3 +2867,196 @@ document.getElementById('browserGame').addEventListener('touchmove', (e) => {
     const t = e.touches[0];
     spawnCursorTrail(t.clientX, t.clientY);
 }, { passive: true });
+
+// ============================================
+//  КНОПКА БАБОЧКИ В ПЕЙНТЕ
+// ============================================
+const butterflyToggleBtn = document.getElementById('butterflyToggleBtn');
+if (butterflyToggleBtn) {
+    butterflyToggleBtn.addEventListener('click', () => {
+        playClickSound();
+        
+        if (!butterflyEnabled) return;
+        
+        if (butterfly) {
+            showNotification('Эта бабочка не хочет ещё друзей');
+            return;
+        }
+        
+        butterflyActive = !butterflyActive;
+        updateButterflyButtonUI();
+        
+        if (butterflyActive) {
+            spawnButterfly();
+        }
+        
+        localStorage.setItem('butterflyActive', butterflyActive);
+    });
+}
+
+function updateButterflyButtonUI() {
+    const btn = document.getElementById('butterflyToggleBtn');
+    if (!btn) return;
+    if (butterflyEnabled) {
+        btn.disabled = false;
+        btn.classList.remove('disabled');
+    } else {
+        btn.disabled = true;
+        btn.classList.add('disabled');
+    }
+}
+
+function loadButterflyState() {
+    const savedOnce = localStorage.getItem('butterflySpawnedOnce');
+    const savedEnabled = localStorage.getItem('butterflyEnabled');
+    const savedActive = localStorage.getItem('butterflyActive');
+    
+    if (savedOnce === 'true') butterflySpawnedOnce = true;
+    if (savedEnabled === 'true') butterflyEnabled = true;
+    if (savedActive === 'true') butterflyActive = true;
+    
+    updateButterflyButtonUI();
+}
+
+loadButterflyState();
+
+// ============================================
+//  СЕРДЦА — ДОПОЛНИТЕЛЬНАЯ ЖИЗНЬ
+// ============================================
+function loadHeartsState() {
+    heartsEnabled = true;
+    heartsCount = 0;
+    heartsUIVisible = false;
+    heartCheckCounter = 0;
+    updateHeartButton(true);
+    updateHeartsUI();
+}
+
+function loadPaintState() {
+    paintOpened = false;
+    heartsUIVisible = false;
+}
+
+loadPaintState();
+
+function updateHeartsUI() {
+    const counter = document.getElementById('heartsCounter');
+    const score = document.getElementById('heartsScore');
+    
+    if (!counter || !score) return;
+    
+    if (heartsUIVisible && heartsEnabled && heartsCount > 0) {
+        counter.style.display = 'inline-flex';
+        score.textContent = heartsCount;
+    } else {
+        counter.style.display = 'none';
+        score.textContent = '0';
+    }
+}
+
+function updateHeartButton(enabled) {
+    const icon = document.getElementById('heartIcon');
+    if (!icon) return;
+    icon.textContent = enabled ? '❤' : '♡';
+}
+
+function showNotification(text) {
+    const notif = document.getElementById('paintNotification');
+    if (!notif) return;
+    notif.textContent = text;
+    notif.classList.add('show');
+    setTimeout(() => notif.classList.remove('show'), 3000);
+}
+
+const heartToggleBtn = document.getElementById('heartToggleBtn');
+if (heartToggleBtn) {
+    heartToggleBtn.addEventListener('click', () => {
+        playClickSound();
+        heartsEnabled = !heartsEnabled;
+        updateHeartButton(heartsEnabled);
+        updateHeartsUI();
+        
+        if (heartsEnabled) {
+            showNotification('Компьютер решил пощадить вас ❤');
+        } else {
+            showNotification('Компьютер будет беспощаден.');
+            heartsCount = 0;
+        }
+        
+        localStorage.setItem('heartsEnabled', heartsEnabled);
+        localStorage.setItem('heartsCount', heartsCount);
+    });
+}
+
+function checkHeartDrop() {
+    if (!heartsEnabled) return;
+    if (heartsCount >= 5) return;
+    
+    heartCheckCounter++;
+    if (heartCheckCounter % 5 !== 0) return;
+    
+    let baseChance = 0;
+    if (memeScore >= 150 && memeScore < 200) baseChance = 0.05;
+    else if (memeScore >= 200 && memeScore < 300) baseChance = 0.10;
+    else if (memeScore >= 300 && memeScore < 500) baseChance = 0.15;
+    else if (memeScore >= 500) baseChance = 0.20;
+    
+    if (baseChance === 0) return;
+    
+    const multipliers = [1.0, 0.6, 0.4, 0.25, 0.15];
+    const multiplier = multipliers[heartsCount] || 0.1;
+    const chance = baseChance * multiplier;
+    
+    if (Math.random() < chance) {
+        heartsCount++;
+        if (heartsUIVisible) {
+            updateHeartsUI();
+        }
+        localStorage.setItem('heartsCount', heartsCount);
+        showNotification('❤ Вы нашли дополнительную жизнь!');
+        playClickSound();
+    }
+}
+
+function useHeart() {
+    if (!heartsEnabled) return false;
+    if (heartsCount <= 0) return false;
+    
+    heartsCount--;
+    updateHeartsUI();
+    localStorage.setItem('heartsCount', heartsCount);
+    
+    const saveWin = document.createElement('div');
+    saveWin.className = 'win7-window';
+    saveWin.style.cssText = `
+        position: fixed;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 99998;
+    `;
+    saveWin.innerHTML = `
+        <div class="win7-titlebar">
+            <span class="win7-title">Спасение</span>
+            <button class="win7-close">✕</button>
+        </div>
+        <div class="win7-body">
+            <div class="win7-icon" style="color: #c94242; font-size: 40px;">❤</div>
+            <div class="win7-message">Вы были спасены!<br>Компьютер дал вам второй шанс.</div>
+        </div>
+        <div class="win7-buttons"><button class="win7-ok">OK</button></div>
+    `;
+    document.body.appendChild(saveWin);
+    
+    const closeSaveWin = () => {
+        saveWin.style.transition = 'opacity 0.3s';
+        saveWin.style.opacity = '0';
+        setTimeout(() => saveWin.remove(), 300);
+    };
+    saveWin.querySelector('.win7-ok').addEventListener('click', closeSaveWin);
+    saveWin.querySelector('.win7-close').addEventListener('click', closeSaveWin);
+    
+    return true;
+}
+
+loadHeartsState();
+updateHeartsUI();

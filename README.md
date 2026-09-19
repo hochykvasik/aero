@@ -4,16 +4,15 @@
 эпилептикам осторожно, есть быстро сменяющиеся кадры (появление радужных окошек)
 
 эта игрулька, для прикола и раслабона, так что не берите всерьез 
-играйте на здоровье.
-Звуки я скачала из открытых источников в интерете,
-фото тоже (парочка фоток это мой кот)
+играйте на здоровье 
+звуки я скачала из открытых источников в интерете,
+фото тоже ( парочка фоток это мой кот)
 
  OST на заднем плане называется Lotus_Waters из игры yume nikki
 
 https://hochykvasik.github.io/aero/
  
- если игра понравится можете отзыв мне где нибудь отписать может я еще каких то мини игр добавлю сюда, но  ничего не гарантирую,
- сейчас планирую развить до версии 1.5 а дальше может новые игры добавлю
+ если игра понравится можете отзыв мне где нибудь отписать может я еще каких то мини игр добавлю сюда, но не гарантирую
 
 При создании этого сайтика вдохновлялась игрой Progressbar95 
 Код написан в основном с использованием DeepSeek
@@ -32,7 +31,7 @@ and the photos too (a couple of photos are of my cat).
 
 https://hochykvasik.github.io/aero/
 
-If you like the game, you can leave a review somewhere, and maybe I’ll add some more mini‑games here — but I’m not guaranteeing anything.  Right now I’m planning to take it to version 1.5, and then maybe I’ll add some new games.
+If you like the game, you can leave a review somewhere, maybe I’ll add some more mini‑games here, but I can’t guarantee it.
 
 Inspiration is taken from the game Progressbar95.
 The code is written mainly using DeepSeek.
